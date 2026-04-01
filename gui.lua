@@ -1,6 +1,6 @@
--- =============== УЛУЧШЕННЫЙ GUI ИНТЕРФЕЙС ===============
+-- =============== GUI ИНТЕРФЕЙС ===============
 
--- Создаем основной GUI для управления
+-- Создаем основной GUI
 local controlGui = Instance.new("ScreenGui")
 controlGui.Name = "ControlPanelGui"
 controlGui.ResetOnSpawn = false
@@ -8,9 +8,8 @@ controlGui.Parent = LocalPlayer:WaitForChild("PlayerGui")
 
 -- Основная панель
 local mainPanel = Instance.new("Frame")
-mainPanel.Name = "MainPanel"
-mainPanel.Size = UDim2.new(0, 350, 0, 600)
-mainPanel.Position = UDim2.new(0, 10, 0.5, -300)
+mainPanel.Size = UDim2.new(0, 350, 0, 550)
+mainPanel.Position = UDim2.new(0, 10, 0.5, -275)
 mainPanel.BackgroundColor3 = Color3.fromRGB(25, 25, 35)
 mainPanel.BackgroundTransparency = 0.1
 mainPanel.BorderSizePixel = 1
@@ -22,10 +21,9 @@ local panelCorner = Instance.new("UICorner")
 panelCorner.CornerRadius = UDim.new(0, 10)
 panelCorner.Parent = mainPanel
 
--- Заголовок панели
+-- Заголовок
 local panelTitle = Instance.new("TextLabel")
 panelTitle.Size = UDim2.new(1, 0, 0, 40)
-panelTitle.Position = UDim2.new(0, 0, 0, 0)
 panelTitle.BackgroundColor3 = Color3.fromRGB(40, 40, 55)
 panelTitle.BackgroundTransparency = 0.3
 panelTitle.Text = "⚙️ КОНТРОЛЬНАЯ ПАНЕЛЬ"
@@ -33,10 +31,6 @@ panelTitle.TextColor3 = Color3.fromRGB(255, 255, 255)
 panelTitle.TextSize = 16
 panelTitle.Font = Enum.Font.GothamBold
 panelTitle.Parent = mainPanel
-
-local titleCorner = Instance.new("UICorner")
-titleCorner.CornerRadius = UDim.new(0, 10)
-titleCorner.Parent = panelTitle
 
 -- Кнопка закрытия
 local closeButton = Instance.new("TextButton")
@@ -49,17 +43,12 @@ closeButton.TextSize = 18
 closeButton.Font = Enum.Font.GothamBold
 closeButton.Parent = panelTitle
 
-local closeCorner = Instance.new("UICorner")
-closeCorner.CornerRadius = UDim.new(0, 5)
-closeCorner.Parent = closeButton
-
 closeButton.MouseButton1Click:Connect(function()
     mainPanel.Visible = false
 end)
 
--- Кнопка для открытия панели
+-- Кнопка открытия
 local toggleButton = Instance.new("TextButton")
-toggleButton.Name = "ToggleButton"
 toggleButton.Size = UDim2.new(0, 40, 0, 40)
 toggleButton.Position = UDim2.new(1, -50, 0, 10)
 toggleButton.BackgroundColor3 = Color3.fromRGB(30, 30, 45)
@@ -69,10 +58,6 @@ toggleButton.TextColor3 = Color3.fromRGB(255, 255, 255)
 toggleButton.TextSize = 20
 toggleButton.Font = Enum.Font.GothamBold
 toggleButton.Parent = controlGui
-
-local toggleCorner = Instance.new("UICorner")
-toggleCorner.CornerRadius = UDim.new(0, 8)
-toggleCorner.Parent = toggleButton
 
 toggleButton.MouseButton1Click:Connect(function()
     mainPanel.Visible = true
@@ -93,7 +78,7 @@ scrollLayout.Padding = UDim.new(0, 8)
 scrollLayout.SortOrder = Enum.SortOrder.LayoutOrder
 scrollLayout.Parent = scrollFrame
 
--- Функция создания секции
+-- Вспомогательные функции
 local function createSection(title, order)
     local section = Instance.new("Frame")
     section.Size = UDim2.new(1, -10, 0, 0)
@@ -121,7 +106,6 @@ local function createSection(title, order)
     return section
 end
 
--- Функция создания кнопки
 local function createButton(section, label, yPos, onClick)
     local btnFrame = Instance.new("Frame")
     btnFrame.Size = UDim2.new(1, -10, 0, 30)
@@ -149,7 +133,6 @@ local function createButton(section, label, yPos, onClick)
     return btnFrame
 end
 
--- Функция создания переключателя
 local function createToggle(section, label, getState, setState, yPos)
     local toggleFrame = Instance.new("Frame")
     toggleFrame.Size = UDim2.new(1, -10, 0, 30)
@@ -159,7 +142,6 @@ local function createToggle(section, label, getState, setState, yPos)
     
     local labelText = Instance.new("TextLabel")
     labelText.Size = UDim2.new(0.7, 0, 1, 0)
-    labelText.Position = UDim2.new(0, 0, 0, 0)
     labelText.BackgroundTransparency = 1
     labelText.Text = label
     labelText.TextColor3 = Color3.fromRGB(220, 220, 220)
@@ -191,7 +173,6 @@ local function createToggle(section, label, getState, setState, yPos)
     return toggleFrame
 end
 
--- Функция создания поля ввода
 local function createInputField(section, label, placeholder, yPos, onEnter)
     local inputFrame = Instance.new("Frame")
     inputFrame.Size = UDim2.new(1, -10, 0, 30)
@@ -201,7 +182,6 @@ local function createInputField(section, label, placeholder, yPos, onEnter)
     
     local labelText = Instance.new("TextLabel")
     labelText.Size = UDim2.new(0.35, 0, 1, 0)
-    labelText.Position = UDim2.new(0, 0, 0, 0)
     labelText.BackgroundTransparency = 1
     labelText.Text = label
     labelText.TextColor3 = Color3.fromRGB(220, 220, 220)
@@ -237,25 +217,22 @@ local function createInputField(section, label, placeholder, yPos, onEnter)
     return inputFrame
 end
 
--- =============== СОЗДАЕМ СЕКЦИИ ===============
+-- =============== СОЗДАНИЕ СЕКЦИЙ ===============
 
 -- Секция 1: ESP
 local espSection = createSection("🎯 ESP", 1)
 local espY = 25
 createToggle(espSection, "ESP фруктов", function() return fruitEspEnabled end, function(v) 
     fruitEspEnabled = v
-    if v then
-        fruitEspThread = task.spawn(fruitEspLoop)
-        addOutput("✓ ESP фруктов ВКЛЮЧЕН", Color3.fromRGB(100, 255, 100))
-    else
-        fruitEspThread = nil
-        addOutput("⛔ ESP фруктов ВЫКЛЮЧЕН", Color3.fromRGB(255, 100, 100))
+    if v and fruitEspLoop then
+        task.spawn(fruitEspLoop)
     end
+    addOutput(v and "✓ ESP фруктов ВКЛЮЧЕН" or "⛔ ESP фруктов ВЫКЛЮЧЕН", Color3.fromRGB(100, 255, 100))
 end, espY)
 espY = espY + 35
 
 createButton(espSection, "📦 Телепорт к ближайшему фрукту", espY, function()
-    teleportToNearestFruit()
+    if teleportToNearestFruit then teleportToNearestFruit() end
 end)
 espY = espY + 35
 
@@ -270,18 +247,15 @@ local easterSection = createSection("🐣 Easter Event", 2)
 local easterY = 25
 createToggle(easterSection, "ESP яиц", function() return eggEspEnabled end, function(v) 
     eggEspEnabled = v
-    if v then
-        eggEspThread = task.spawn(eggEspLoop)
-        addOutput("✓ ESP яиц ВКЛЮЧЕН", Color3.fromRGB(100, 255, 100))
-    else
-        eggEspThread = nil
-        addOutput("⛔ ESP яиц ВЫКЛЮЧЕН", Color3.fromRGB(255, 100, 100))
+    if v and eggEspLoop then
+        task.spawn(eggEspLoop)
     end
+    addOutput(v and "✓ ESP яиц ВКЛЮЧЕН" or "⛔ ESP яиц ВЫКЛЮЧЕН", Color3.fromRGB(100, 255, 100))
 end, easterY)
 easterY = easterY + 35
 
 createButton(easterSection, "🥚 Телепорт к ближайшему яйцу", easterY, function()
-    teleportToNearestEgg()
+    if teleportToNearestEgg then teleportToNearestEgg() end
 end)
 easterY = easterY + 35
 easterSection.Size = UDim2.new(1, -10, 0, easterY + 10)
@@ -290,9 +264,7 @@ easterSection.Size = UDim2.new(1, -10, 0, easterY + 10)
 local combatSection = createSection("⚔️ Боевые функции", 3)
 local combatY = 25
 createToggle(combatSection, "Киллаура", function() return auraEnabled end, function(v) 
-    if v ~= auraEnabled then
-        toggleAura()
-    end
+    if v ~= auraEnabled and toggleAura then toggleAura() end
 end, combatY)
 combatY = combatY + 35
 
@@ -303,9 +275,7 @@ end, combatY)
 combatY = combatY + 35
 
 createToggle(combatSection, "AIM (по мобам)", function() return aimEnabled end, function(v) 
-    if v ~= aimEnabled then
-        toggleAim()
-    end
+    if v ~= aimEnabled and toggleAim then toggleAim() end
 end, combatY)
 combatY = combatY + 35
 combatSection.Size = UDim2.new(1, -10, 0, combatY + 10)
@@ -316,41 +286,25 @@ local farmY = 25
 createToggle(farmSection, "Автофарм уровня", function() return farmEnabled end, function(v) 
     if v ~= farmEnabled then
         farmEnabled = v
-        if v then
-            addOutput("✓ АВТОФАРМ уровня ВКЛЮЧЁН", Color3.fromRGB(100, 255, 100))
-            farmThread = task.spawn(function()
-                task.spawn(auraLoop)
-                autoFlyToEnemies()
-            end)
-        else
-            addOutput("⛔ АВТОФАРМ уровня ВЫКЛЮЧЕН", Color3.fromRGB(255, 100, 100))
-            farmThread = nil
-        end
+        addOutput(v and "✓ АВТОФАРМ уровня ВКЛЮЧЁН" or "⛔ АВТОФАРМ уровня ВЫКЛЮЧЕН", Color3.fromRGB(100, 255, 100))
     end
 end, farmY)
 farmY = farmY + 35
 
 createToggle(farmSection, "Сбор сундуков", function() return chestFarmRunning end, function(v) 
-    if v then
-        startChestFarm()
-    else
-        stopChestFarm()
-    end
+    if v and startChestFarm then startChestFarm() 
+    elseif stopChestFarm then stopChestFarm() end
 end, farmY)
 farmY = farmY + 35
 
 createInputField(farmSection, "Мастерка:", "melee/sword/gun/fruit/off", farmY, function(value)
-    local cmd = "/mastery " .. value
-    processCommand(cmd)
+    if processCommand then processCommand("/mastery " .. value) end
 end)
 farmY = farmY + 35
 
 createToggle(farmSection, "Режим рейда", function() return raidRunning end, function(v) 
-    if v then
-        startRaid()
-    else
-        stopRaid()
-    end
+    if v and startRaid then startRaid()
+    elseif stopRaid then stopRaid() end
 end, farmY)
 farmY = farmY + 35
 farmSection.Size = UDim2.new(1, -10, 0, farmY + 10)
@@ -359,14 +313,12 @@ farmSection.Size = UDim2.new(1, -10, 0, farmY + 10)
 local miscSection = createSection("🔧 Misc", 5)
 local miscY = 25
 createToggle(miscSection, "Режим полёта", function() return Fly end, function(v) 
-    if v ~= Fly then
-        toggleFlyMode()
-    end
+    if v ~= Fly and toggleFlyMode then toggleFlyMode() end
 end, miscY)
 miscY = miscY + 35
 
 createToggle(miscSection, "Noclip", function() 
-    local char = getCharacter()
+    local char = getCharacter and getCharacter()
     if char then
         for _, v in ipairs(char:GetChildren()) do
             if v:IsA("BasePart") and not v.CanCollide then
@@ -376,23 +328,23 @@ createToggle(miscSection, "Noclip", function()
     end
     return false
 end, function(v) 
-    toggleNoclip(v)
+    if toggleNoclip then toggleNoclip(v) end
     addOutput(v and "✓ Noclip ВКЛЮЧЕН" or "⛔ Noclip ВЫКЛЮЧЕН", Color3.fromRGB(100, 255, 100))
 end, miscY)
 miscY = miscY + 35
 
 createInputField(miscSection, "Телепорт к игроку:", "ник", miscY, function(value)
-    flyToPlayer(value)
+    if flyToPlayer then flyToPlayer(value) end
 end)
 miscY = miscY + 35
 
 createInputField(miscSection, "Телепорт к острову:", "название", miscY, function(value)
-    flyToIslandByName(value)
+    if flyToIslandByName then flyToIslandByName(value) end
 end)
 miscY = miscY + 35
 
 createButton(miscSection, "📋 Список островов", miscY, function()
-    listIslands()
+    if listIslands then listIslands() end
 end)
 miscY = miscY + 35
 miscSection.Size = UDim2.new(1, -10, 0, miscY + 10)
@@ -423,7 +375,7 @@ local playerY = 25
 
 createInputField(playerSection, "Сила прыжка:", "default = 50", playerY, function(value)
     local v = tonumber(value)
-    if v then
+    if v and setPlayerJumpPower then
         setPlayerJumpPower(v)
     else
         addOutput("✗ Значение должно быть числом", Color3.fromRGB(255, 100, 100))
@@ -454,7 +406,7 @@ uptimeCorner.Parent = serverUptimeLabel
 serverY = serverY + 35
 
 createButton(serverSection, "📡 Информация о сервере", serverY, function()
-    showServerInfo()
+    if showServerInfo then showServerInfo() end
 end)
 serverY = serverY + 35
 serverSection.Size = UDim2.new(1, -10, 0, serverY + 10)
@@ -462,8 +414,10 @@ serverSection.Size = UDim2.new(1, -10, 0, serverY + 10)
 -- Обновление аптайма
 task.spawn(function()
     while true do
-        local uptime = formatServerUptime()
-        serverUptimeLabel.Text = "🕐 Аптайм: " .. uptime
+        if formatServerUptime then
+            local uptime = formatServerUptime()
+            serverUptimeLabel.Text = "🕐 Аптайм: " .. uptime
+        end
         task.wait(2)
     end
 end)
@@ -475,4 +429,4 @@ scrollLayout:GetPropertyChangedSignal("AbsoluteContentSize"):Connect(function()
     scrollFrame.CanvasSize = UDim2.new(0, 0, 0, scrollLayout.AbsoluteContentSize.Y)
 end)
 
-addOutput("✓ Улучшенный GUI интерфейс загружен! (кнопка ⚙️ в правом верхнем углу)", Color3.fromRGB(100, 255, 100))
+addOutput("✓ GUI интерфейс загружен! (кнопка ⚙️)", Color3.fromRGB(100, 255, 100))
