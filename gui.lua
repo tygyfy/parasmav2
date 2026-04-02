@@ -1,432 +1,389 @@
--- =============== GUI ИНТЕРФЕЙС ===============
+-- ============================================
+-- GUI БИБЛИОТЕКА
+-- ============================================
 
--- Создаем основной GUI
-local controlGui = Instance.new("ScreenGui")
-controlGui.Name = "ControlPanelGui"
-controlGui.ResetOnSpawn = false
-controlGui.Parent = LocalPlayer:WaitForChild("PlayerGui")
+local Players = game:GetService("Players")
+local LocalPlayer = Players.LocalPlayer
+local UserInputService = game:GetService("UserInputService")
 
--- Основная панель
-local mainPanel = Instance.new("Frame")
-mainPanel.Size = UDim2.new(0, 350, 0, 550)
-mainPanel.Position = UDim2.new(0, 10, 0.5, -275)
-mainPanel.BackgroundColor3 = Color3.fromRGB(25, 25, 35)
-mainPanel.BackgroundTransparency = 0.1
-mainPanel.BorderSizePixel = 1
-mainPanel.BorderColor3 = Color3.fromRGB(100, 150, 200)
-mainPanel.Visible = true
-mainPanel.Parent = controlGui
+-- Основной класс GUI
+local GUI = {}
+GUI.__index = GUI
 
-local panelCorner = Instance.new("UICorner")
-panelCorner.CornerRadius = UDim.new(0, 10)
-panelCorner.Parent = mainPanel
-
--- Заголовок
-local panelTitle = Instance.new("TextLabel")
-panelTitle.Size = UDim2.new(1, 0, 0, 40)
-panelTitle.BackgroundColor3 = Color3.fromRGB(40, 40, 55)
-panelTitle.BackgroundTransparency = 0.3
-panelTitle.Text = "⚙️ КОНТРОЛЬНАЯ ПАНЕЛЬ"
-panelTitle.TextColor3 = Color3.fromRGB(255, 255, 255)
-panelTitle.TextSize = 16
-panelTitle.Font = Enum.Font.GothamBold
-panelTitle.Parent = mainPanel
-
--- Кнопка закрытия
-local closeButton = Instance.new("TextButton")
-closeButton.Size = UDim2.new(0, 30, 0, 30)
-closeButton.Position = UDim2.new(1, -35, 0, 5)
-closeButton.BackgroundColor3 = Color3.fromRGB(200, 50, 50)
-closeButton.Text = "✕"
-closeButton.TextColor3 = Color3.fromRGB(255, 255, 255)
-closeButton.TextSize = 18
-closeButton.Font = Enum.Font.GothamBold
-closeButton.Parent = panelTitle
-
-closeButton.MouseButton1Click:Connect(function()
-    mainPanel.Visible = false
-end)
-
--- Кнопка открытия
-local toggleButton = Instance.new("TextButton")
-toggleButton.Size = UDim2.new(0, 40, 0, 40)
-toggleButton.Position = UDim2.new(1, -50, 0, 10)
-toggleButton.BackgroundColor3 = Color3.fromRGB(30, 30, 45)
-toggleButton.BackgroundTransparency = 0.2
-toggleButton.Text = "⚙️"
-toggleButton.TextColor3 = Color3.fromRGB(255, 255, 255)
-toggleButton.TextSize = 20
-toggleButton.Font = Enum.Font.GothamBold
-toggleButton.Parent = controlGui
-
-toggleButton.MouseButton1Click:Connect(function()
-    mainPanel.Visible = true
-end)
-
--- ScrollingFrame
-local scrollFrame = Instance.new("ScrollingFrame")
-scrollFrame.Size = UDim2.new(1, 0, 1, -40)
-scrollFrame.Position = UDim2.new(0, 0, 0, 40)
-scrollFrame.BackgroundTransparency = 1
-scrollFrame.BorderSizePixel = 0
-scrollFrame.CanvasSize = UDim2.new(0, 0, 0, 0)
-scrollFrame.ScrollBarThickness = 6
-scrollFrame.Parent = mainPanel
-
-local scrollLayout = Instance.new("UIListLayout")
-scrollLayout.Padding = UDim.new(0, 8)
-scrollLayout.SortOrder = Enum.SortOrder.LayoutOrder
-scrollLayout.Parent = scrollFrame
-
--- Вспомогательные функции
-local function createSection(title, order)
-    local section = Instance.new("Frame")
-    section.Size = UDim2.new(1, -10, 0, 0)
-    section.BackgroundColor3 = Color3.fromRGB(35, 35, 45)
-    section.BackgroundTransparency = 0.2
-    section.BorderSizePixel = 0
-    section.LayoutOrder = order
-    section.Parent = scrollFrame
+-- Создание основного окна
+function GUI:CreateWindow(config)
+    local window = {}
+    window.__index = window
     
-    local sectionCorner = Instance.new("UICorner")
-    sectionCorner.CornerRadius = UDim.new(0, 6)
-    sectionCorner.Parent = section
+    config = config or {}
+    local title = config.Title or "GUI"
+    local size = config.Size or UDim2.new(0, 400, 0, 500)
+    local position = config.Position or UDim2.new(0, 10, 0.5, -250)
     
-    local titleLabel = Instance.new("TextLabel")
-    titleLabel.Size = UDim2.new(1, 0, 0, 25)
-    titleLabel.Position = UDim2.new(0, 5, 0, 0)
-    titleLabel.BackgroundTransparency = 1
-    titleLabel.Text = title
-    titleLabel.TextColor3 = Color3.fromRGB(150, 200, 255)
-    titleLabel.TextSize = 12
-    titleLabel.TextXAlignment = Enum.TextXAlignment.Left
-    titleLabel.Font = Enum.Font.GothamBold
-    titleLabel.Parent = section
+    -- Создание ScreenGui
+    window.ScreenGui = Instance.new("ScreenGui")
+    window.ScreenGui.Name = title .. "Gui"
+    window.ScreenGui.ResetOnSpawn = false
+    window.ScreenGui.Parent = LocalPlayer:WaitForChild("PlayerGui")
     
-    return section
-end
-
-local function createButton(section, label, yPos, onClick)
-    local btnFrame = Instance.new("Frame")
-    btnFrame.Size = UDim2.new(1, -10, 0, 30)
-    btnFrame.Position = UDim2.new(0, 5, 0, yPos)
-    btnFrame.BackgroundTransparency = 1
-    btnFrame.Parent = section
+    -- Основная панель
+    window.MainPanel = Instance.new("Frame")
+    window.MainPanel.Size = size
+    window.MainPanel.Position = position
+    window.MainPanel.BackgroundColor3 = Color3.fromRGB(25, 25, 35)
+    window.MainPanel.BackgroundTransparency = 0.1
+    window.MainPanel.BorderSizePixel = 1
+    window.MainPanel.BorderColor3 = Color3.fromRGB(100, 150, 200)
+    window.MainPanel.Visible = true
+    window.MainPanel.Parent = window.ScreenGui
     
-    local button = Instance.new("TextButton")
-    button.Size = UDim2.new(1, 0, 1, 0)
-    button.BackgroundColor3 = Color3.fromRGB(55, 55, 70)
-    button.Text = label
-    button.TextColor3 = Color3.fromRGB(255, 255, 255)
-    button.TextSize = 11
-    button.Font = Enum.Font.GothamBold
-    button.Parent = btnFrame
+    local panelCorner = Instance.new("UICorner")
+    panelCorner.CornerRadius = UDim.new(0, 10)
+    panelCorner.Parent = window.MainPanel
     
-    local btnCorner = Instance.new("UICorner")
-    btnCorner.CornerRadius = UDim.new(0, 4)
-    btnCorner.Parent = button
+    -- Заголовок
+    window.TitleBar = Instance.new("TextLabel")
+    window.TitleBar.Size = UDim2.new(1, 0, 0, 40)
+    window.TitleBar.BackgroundColor3 = Color3.fromRGB(40, 40, 55)
+    window.TitleBar.BackgroundTransparency = 0.3
+    window.TitleBar.Text = title
+    window.TitleBar.TextColor3 = Color3.fromRGB(255, 255, 255)
+    window.TitleBar.TextSize = 16
+    window.TitleBar.Font = Enum.Font.GothamBold
+    window.TitleBar.Parent = window.MainPanel
     
-    if onClick then
-        button.MouseButton1Click:Connect(onClick)
-    end
+    local titleCorner = Instance.new("UICorner")
+    titleCorner.CornerRadius = UDim.new(0, 10)
+    titleCorner.Parent = window.TitleBar
     
-    return btnFrame
-end
-
-local function createToggle(section, label, getState, setState, yPos)
-    local toggleFrame = Instance.new("Frame")
-    toggleFrame.Size = UDim2.new(1, -10, 0, 30)
-    toggleFrame.Position = UDim2.new(0, 5, 0, yPos)
-    toggleFrame.BackgroundTransparency = 1
-    toggleFrame.Parent = section
-    
-    local labelText = Instance.new("TextLabel")
-    labelText.Size = UDim2.new(0.7, 0, 1, 0)
-    labelText.BackgroundTransparency = 1
-    labelText.Text = label
-    labelText.TextColor3 = Color3.fromRGB(220, 220, 220)
-    labelText.TextSize = 11
-    labelText.TextXAlignment = Enum.TextXAlignment.Left
-    labelText.Font = Enum.Font.Gotham
-    labelText.Parent = toggleFrame
-    
-    local toggleBtn = Instance.new("TextButton")
-    toggleBtn.Size = UDim2.new(0, 60, 0, 25)
-    toggleBtn.Position = UDim2.new(1, -65, 0, 2.5)
-    toggleBtn.BackgroundColor3 = getState() and Color3.fromRGB(100, 200, 100) or Color3.fromRGB(200, 80, 80)
-    toggleBtn.Text = getState() and "ON" or "OFF"
-    toggleBtn.TextColor3 = Color3.fromRGB(255, 255, 255)
-    toggleBtn.TextSize = 11
-    toggleBtn.Font = Enum.Font.GothamBold
-    toggleBtn.Parent = toggleFrame
-    
-    local btnCorner = Instance.new("UICorner")
-    btnCorner.CornerRadius = UDim.new(0, 4)
-    btnCorner.Parent = toggleBtn
-    
-    toggleBtn.MouseButton1Click:Connect(function()
-        setState(not getState())
-        toggleBtn.BackgroundColor3 = getState() and Color3.fromRGB(100, 200, 100) or Color3.fromRGB(200, 80, 80)
-        toggleBtn.Text = getState() and "ON" or "OFF"
+    -- Кнопка закрытия
+    window.CloseButton = Instance.new("TextButton")
+    window.CloseButton.Size = UDim2.new(0, 30, 0, 30)
+    window.CloseButton.Position = UDim2.new(1, -35, 0, 5)
+    window.CloseButton.BackgroundColor3 = Color3.fromRGB(200, 50, 50)
+    window.CloseButton.Text = "✕"
+    window.CloseButton.TextColor3 = Color3.fromRGB(255, 255, 255)
+    window.CloseButton.TextSize = 18
+    window.CloseButton.Font = Enum.Font.GothamBold
+    window.CloseButton.Parent = window.TitleBar
+    window.CloseButton.MouseButton1Click:Connect(function()
+        window.MainPanel.Visible = false
+        if window.ToggleButton then
+            window.ToggleButton.Visible = true
+        end
     end)
     
-    return toggleFrame
-end
-
-local function createInputField(section, label, placeholder, yPos, onEnter)
-    local inputFrame = Instance.new("Frame")
-    inputFrame.Size = UDim2.new(1, -10, 0, 30)
-    inputFrame.Position = UDim2.new(0, 5, 0, yPos)
-    inputFrame.BackgroundTransparency = 1
-    inputFrame.Parent = section
+    -- Кнопка открытия
+    window.ToggleButton = Instance.new("TextButton")
+    window.ToggleButton.Size = UDim2.new(0, 40, 0, 40)
+    window.ToggleButton.Position = UDim2.new(1, -50, 0, 10)
+    window.ToggleButton.BackgroundColor3 = Color3.fromRGB(30, 30, 45)
+    window.ToggleButton.BackgroundTransparency = 0.2
+    window.ToggleButton.Text = "⚙️"
+    window.ToggleButton.TextColor3 = Color3.fromRGB(255, 255, 255)
+    window.ToggleButton.TextSize = 20
+    window.ToggleButton.Font = Enum.Font.GothamBold
+    window.ToggleButton.Visible = false
+    window.ToggleButton.Parent = window.ScreenGui
+    window.ToggleButton.MouseButton1Click:Connect(function()
+        window.MainPanel.Visible = true
+        window.ToggleButton.Visible = false
+    end)
     
-    local labelText = Instance.new("TextLabel")
-    labelText.Size = UDim2.new(0.35, 0, 1, 0)
-    labelText.BackgroundTransparency = 1
-    labelText.Text = label
-    labelText.TextColor3 = Color3.fromRGB(220, 220, 220)
-    labelText.TextSize = 11
-    labelText.TextXAlignment = Enum.TextXAlignment.Left
-    labelText.Font = Enum.Font.Gotham
-    labelText.Parent = inputFrame
+    -- ScrollingFrame
+    window.ScrollFrame = Instance.new("ScrollingFrame")
+    window.ScrollFrame.Size = UDim2.new(1, 0, 1, -40)
+    window.ScrollFrame.Position = UDim2.new(0, 0, 0, 40)
+    window.ScrollFrame.BackgroundTransparency = 1
+    window.ScrollFrame.BorderSizePixel = 0
+    window.ScrollFrame.CanvasSize = UDim2.new(0, 0, 0, 0)
+    window.ScrollFrame.ScrollBarThickness = 6
+    window.ScrollFrame.Parent = window.MainPanel
     
-    local inputBox = Instance.new("TextBox")
-    inputBox.Size = UDim2.new(0.6, 0, 1, 0)
-    inputBox.Position = UDim2.new(0.35, 0, 0, 0)
-    inputBox.BackgroundColor3 = Color3.fromRGB(45, 45, 55)
-    inputBox.Text = ""
-    inputBox.PlaceholderText = placeholder
-    inputBox.TextColor3 = Color3.fromRGB(255, 255, 255)
-    inputBox.TextSize = 11
-    inputBox.Font = Enum.Font.Gotham
-    inputBox.Parent = inputFrame
+    window.ScrollLayout = Instance.new("UIListLayout")
+    window.ScrollLayout.Padding = UDim.new(0, 8)
+    window.ScrollLayout.SortOrder = Enum.SortOrder.LayoutOrder
+    window.ScrollLayout.Parent = window.ScrollFrame
     
-    local inputCorner = Instance.new("UICorner")
-    inputCorner.CornerRadius = UDim.new(0, 4)
-    inputCorner.Parent = inputBox
+    window.Sections = {}
     
-    if onEnter then
-        inputBox.FocusLost:Connect(function(enterPressed)
-            if enterPressed and inputBox.Text ~= "" then
-                onEnter(inputBox.Text)
-                inputBox.Text = ""
-            end
-        end)
+    local function updateCanvas()
+        window.ScrollFrame.CanvasSize = UDim2.new(0, 0, 0, window.ScrollLayout.AbsoluteContentSize.Y)
     end
     
-    return inputFrame
-end
-
--- =============== СОЗДАНИЕ СЕКЦИЙ ===============
-
--- Секция 1: ESP
-local espSection = createSection("🎯 ESP", 1)
-local espY = 25
-createToggle(espSection, "ESP фруктов", function() return fruitEspEnabled end, function(v) 
-    fruitEspEnabled = v
-    if v and fruitEspLoop then
-        task.spawn(fruitEspLoop)
-    end
-    addOutput(v and "✓ ESP фруктов ВКЛЮЧЕН" or "⛔ ESP фруктов ВЫКЛЮЧЕН", Color3.fromRGB(100, 255, 100))
-end, espY)
-espY = espY + 35
-
-createButton(espSection, "📦 Телепорт к ближайшему фрукту", espY, function()
-    if teleportToNearestFruit then teleportToNearestFruit() end
-end)
-espY = espY + 35
-
-createButton(espSection, "💾 AutoStore (заготовка)", espY, function()
-    addOutput("⚠ AutoStore в разработке", Color3.fromRGB(255, 200, 100))
-end)
-espY = espY + 35
-espSection.Size = UDim2.new(1, -10, 0, espY + 10)
-
--- Секция 2: Easter Event
-local easterSection = createSection("🐣 Easter Event", 2)
-local easterY = 25
-createToggle(easterSection, "ESP яиц", function() return eggEspEnabled end, function(v) 
-    eggEspEnabled = v
-    if v and eggEspLoop then
-        task.spawn(eggEspLoop)
-    end
-    addOutput(v and "✓ ESP яиц ВКЛЮЧЕН" or "⛔ ESP яиц ВЫКЛЮЧЕН", Color3.fromRGB(100, 255, 100))
-end, easterY)
-easterY = easterY + 35
-
-createButton(easterSection, "🥚 Телепорт к ближайшему яйцу", easterY, function()
-    if teleportToNearestEgg then teleportToNearestEgg() end
-end)
-easterY = easterY + 35
-easterSection.Size = UDim2.new(1, -10, 0, easterY + 10)
-
--- Секция 3: Боевые функции
-local combatSection = createSection("⚔️ Боевые функции", 3)
-local combatY = 25
-createToggle(combatSection, "Киллаура", function() return auraEnabled end, function(v) 
-    if v ~= auraEnabled and toggleAura then toggleAura() end
-end, combatY)
-combatY = combatY + 35
-
-createToggle(combatSection, "AIM (по игрокам)", function() return aimbotActive end, function(v) 
-    aimbotActive = v
-    addOutput(v and "✓ AIM ВКЛЮЧЕН" or "⛔ AIM ВЫКЛЮЧЕН", Color3.fromRGB(100, 255, 100))
-end, combatY)
-combatY = combatY + 35
-
-createToggle(combatSection, "AIM (по мобам)", function() return aimEnabled end, function(v) 
-    if v ~= aimEnabled and toggleAim then toggleAim() end
-end, combatY)
-combatY = combatY + 35
-combatSection.Size = UDim2.new(1, -10, 0, combatY + 10)
-
--- Секция 4: Фарм
-local farmSection = createSection("🌾 Фарм", 4)
-local farmY = 25
-createToggle(farmSection, "Автофарм уровня", function() return farmEnabled end, function(v) 
-    if v ~= farmEnabled then
-        farmEnabled = v
-        addOutput(v and "✓ АВТОФАРМ уровня ВКЛЮЧЁН" or "⛔ АВТОФАРМ уровня ВЫКЛЮЧЕН", Color3.fromRGB(100, 255, 100))
-    end
-end, farmY)
-farmY = farmY + 35
-
-createToggle(farmSection, "Сбор сундуков", function() return chestFarmRunning end, function(v) 
-    if v and startChestFarm then startChestFarm() 
-    elseif stopChestFarm then stopChestFarm() end
-end, farmY)
-farmY = farmY + 35
-
-createInputField(farmSection, "Мастерка:", "melee/sword/gun/fruit/off", farmY, function(value)
-    if processCommand then processCommand("/mastery " .. value) end
-end)
-farmY = farmY + 35
-
-createToggle(farmSection, "Режим рейда", function() return raidRunning end, function(v) 
-    if v and startRaid then startRaid()
-    elseif stopRaid then stopRaid() end
-end, farmY)
-farmY = farmY + 35
-farmSection.Size = UDim2.new(1, -10, 0, farmY + 10)
-
--- Секция 5: Misc
-local miscSection = createSection("🔧 Misc", 5)
-local miscY = 25
-createToggle(miscSection, "Режим полёта", function() return Fly end, function(v) 
-    if v ~= Fly and toggleFlyMode then toggleFlyMode() end
-end, miscY)
-miscY = miscY + 35
-
-createToggle(miscSection, "Noclip", function() 
-    local char = getCharacter and getCharacter()
-    if char then
-        for _, v in ipairs(char:GetChildren()) do
-            if v:IsA("BasePart") and not v.CanCollide then
-                return true
-            end
+    updateCanvas()
+    window.ScrollLayout:GetPropertyChangedSignal("AbsoluteContentSize"):Connect(updateCanvas)
+    
+    -- Функция для сворачивания/разворачивания окна
+    function window:Toggle()
+        self.MainPanel.Visible = not self.MainPanel.Visible
+        if self.ToggleButton then
+            self.ToggleButton.Visible = not self.MainPanel.Visible
         end
     end
-    return false
-end, function(v) 
-    if toggleNoclip then toggleNoclip(v) end
-    addOutput(v and "✓ Noclip ВКЛЮЧЕН" or "⛔ Noclip ВЫКЛЮЧЕН", Color3.fromRGB(100, 255, 100))
-end, miscY)
-miscY = miscY + 35
-
-createInputField(miscSection, "Телепорт к игроку:", "ник", miscY, function(value)
-    if flyToPlayer then flyToPlayer(value) end
-end)
-miscY = miscY + 35
-
-createInputField(miscSection, "Телепорт к острову:", "название", miscY, function(value)
-    if flyToIslandByName then flyToIslandByName(value) end
-end)
-miscY = miscY + 35
-
-createButton(miscSection, "📋 Список островов", miscY, function()
-    if listIslands then listIslands() end
-end)
-miscY = miscY + 35
-miscSection.Size = UDim2.new(1, -10, 0, miscY + 10)
-
--- Секция 6: Sea Events
-local seaSection = createSection("🌊 Sea Events", 6)
-local seaY = 25
-
-createInputField(seaSection, "Ник игрока:", "ник", seaY, nil)
-seaY = seaY + 35
-
-createInputField(seaSection, "Название лодки:", "лодка", seaY, nil)
-seaY = seaY + 35
-
-createInputField(seaSection, "Параметр:", "MaxSpeed / TurnSpeed", seaY, nil)
-seaY = seaY + 35
-
-createInputField(seaSection, "Значение:", "число", seaY, function(value)
-    addOutput("⚠ Функция настройки лодки в разработке", Color3.fromRGB(255, 200, 100))
-    addOutput("  Используйте команду: /boat <ник> <лодка> <параметр> <значение>", Color3.fromRGB(150, 200, 255))
-end)
-seaY = seaY + 35
-seaSection.Size = UDim2.new(1, -10, 0, seaY + 10)
-
--- Секция 7: Player
-local playerSection = createSection("👤 Player", 7)
-local playerY = 25
-
-createInputField(playerSection, "Сила прыжка:", "default = 50", playerY, function(value)
-    local v = tonumber(value)
-    if v and setPlayerJumpPower then
-        setPlayerJumpPower(v)
-    else
-        addOutput("✗ Значение должно быть числом", Color3.fromRGB(255, 100, 100))
-    end
-end)
-playerY = playerY + 35
-playerSection.Size = UDim2.new(1, -10, 0, playerY + 10)
-
--- Секция 8: Server
-local serverSection = createSection("🖥️ Server", 8)
-local serverY = 25
-
-local serverUptimeLabel = Instance.new("TextLabel")
-serverUptimeLabel.Size = UDim2.new(1, -10, 0, 30)
-serverUptimeLabel.Position = UDim2.new(0, 5, 0, serverY)
-serverUptimeLabel.BackgroundColor3 = Color3.fromRGB(45, 45, 55)
-serverUptimeLabel.BackgroundTransparency = 0.5
-serverUptimeLabel.Text = "Аптайм: 00:00:00"
-serverUptimeLabel.TextColor3 = Color3.fromRGB(200, 200, 200)
-serverUptimeLabel.TextSize = 11
-serverUptimeLabel.Font = Enum.Font.Gotham
-serverUptimeLabel.Parent = serverSection
-
-local uptimeCorner = Instance.new("UICorner")
-uptimeCorner.CornerRadius = UDim.new(0, 4)
-uptimeCorner.Parent = serverUptimeLabel
-
-serverY = serverY + 35
-
-createButton(serverSection, "📡 Информация о сервере", serverY, function()
-    if showServerInfo then showServerInfo() end
-end)
-serverY = serverY + 35
-serverSection.Size = UDim2.new(1, -10, 0, serverY + 10)
-
--- Обновление аптайма
-task.spawn(function()
-    while true do
-        if formatServerUptime then
-            local uptime = formatServerUptime()
-            serverUptimeLabel.Text = "🕐 Аптайм: " .. uptime
+    
+    -- Функция для добавления секции
+    function window:AddSection(config)
+        local section = {}
+        
+        section.Frame = Instance.new("Frame")
+        section.Frame.Size = UDim2.new(1, -10, 0, 0)
+        section.Frame.BackgroundColor3 = Color3.fromRGB(35, 35, 45)
+        section.Frame.BackgroundTransparency = 0.2
+        section.Frame.BorderSizePixel = 0
+        section.Frame.LayoutOrder = #self.Sections + 1
+        section.Frame.Parent = self.ScrollFrame
+        
+        local sectionCorner = Instance.new("UICorner")
+        sectionCorner.CornerRadius = UDim.new(0, 6)
+        sectionCorner.Parent = section.Frame
+        
+        section.TitleLabel = Instance.new("TextLabel")
+        section.TitleLabel.Size = UDim2.new(1, 0, 0, 25)
+        section.TitleLabel.Position = UDim2.new(0, 5, 0, 0)
+        section.TitleLabel.BackgroundTransparency = 1
+        section.TitleLabel.Text = config.Name or "Section"
+        section.TitleLabel.TextColor3 = Color3.fromRGB(150, 200, 255)
+        section.TitleLabel.TextSize = 12
+        section.TitleLabel.TextXAlignment = Enum.TextXAlignment.Left
+        section.TitleLabel.Font = Enum.Font.GothamBold
+        section.TitleLabel.Parent = section.Frame
+        
+        section.CurrentY = 25
+        
+        -- AddButton
+        function section:AddButton(config)
+            local btnFrame = Instance.new("Frame")
+            btnFrame.Size = UDim2.new(1, -10, 0, 30)
+            btnFrame.Position = UDim2.new(0, 5, 0, self.CurrentY)
+            btnFrame.BackgroundTransparency = 1
+            btnFrame.Parent = self.Frame
+            
+            local button = Instance.new("TextButton")
+            button.Size = UDim2.new(1, 0, 1, 0)
+            button.BackgroundColor3 = Color3.fromRGB(55, 55, 70)
+            button.Text = config.Name or "Button"
+            button.TextColor3 = Color3.fromRGB(255, 255, 255)
+            button.TextSize = 11
+            button.Font = Enum.Font.GothamBold
+            button.Parent = btnFrame
+            
+            local btnCorner = Instance.new("UICorner")
+            btnCorner.CornerRadius = UDim.new(0, 4)
+            btnCorner.Parent = button
+            
+            if config.Callback then
+                button.MouseButton1Click:Connect(config.Callback)
+            end
+            
+            self.CurrentY = self.CurrentY + 35
+            self.Frame.Size = UDim2.new(1, -10, 0, self.CurrentY + 10)
+            
+            return button
         end
-        task.wait(2)
+        
+        -- AddToggle
+        function section:AddToggle(config)
+            local toggleFrame = Instance.new("Frame")
+            toggleFrame.Size = UDim2.new(1, -10, 0, 30)
+            toggleFrame.Position = UDim2.new(0, 5, 0, self.CurrentY)
+            toggleFrame.BackgroundTransparency = 1
+            toggleFrame.Parent = self.Frame
+            
+            local labelText = Instance.new("TextLabel")
+            labelText.Size = UDim2.new(0.7, 0, 1, 0)
+            labelText.BackgroundTransparency = 1
+            labelText.Text = config.Name or "Toggle"
+            labelText.TextColor3 = Color3.fromRGB(220, 220, 220)
+            labelText.TextSize = 11
+            labelText.TextXAlignment = Enum.TextXAlignment.Left
+            labelText.Font = Enum.Font.Gotham
+            labelText.Parent = toggleFrame
+            
+            local toggleBtn = Instance.new("TextButton")
+            toggleBtn.Size = UDim2.new(0, 60, 0, 25)
+            toggleBtn.Position = UDim2.new(1, -65, 0, 2.5)
+            local defaultValue = config.Default or false
+            toggleBtn.BackgroundColor3 = defaultValue and Color3.fromRGB(100, 200, 100) or Color3.fromRGB(200, 80, 80)
+            toggleBtn.Text = defaultValue and "ON" or "OFF"
+            toggleBtn.TextColor3 = Color3.fromRGB(255, 255, 255)
+            toggleBtn.TextSize = 11
+            toggleBtn.Font = Enum.Font.GothamBold
+            toggleBtn.Parent = toggleFrame
+            
+            local btnCorner = Instance.new("UICorner")
+            btnCorner.CornerRadius = UDim.new(0, 4)
+            btnCorner.Parent = toggleBtn
+            
+            local state = defaultValue
+            
+            local function setState(newState)
+                state = newState
+                toggleBtn.BackgroundColor3 = state and Color3.fromRGB(100, 200, 100) or Color3.fromRGB(200, 80, 80)
+                toggleBtn.Text = state and "ON" or "OFF"
+                if config.Callback then
+                    config.Callback(state)
+                end
+                if config.Flag then
+                    _G[config.Flag] = state
+                end
+            end
+            
+            toggleBtn.MouseButton1Click:Connect(function()
+                setState(not state)
+            end)
+            
+            self.CurrentY = self.CurrentY + 35
+            self.Frame.Size = UDim2.new(1, -10, 0, self.CurrentY + 10)
+            
+            return {SetState = setState, GetState = function() return state end}
+        end
+        
+        -- AddLabel
+        function section:AddLabel(config)
+            local label = Instance.new("TextLabel")
+            label.Size = UDim2.new(1, -10, 0, 20)
+            label.Position = UDim2.new(0, 5, 0, self.CurrentY)
+            label.BackgroundTransparency = 1
+            label.Text = config.Name or "Label"
+            label.TextColor3 = Color3.fromRGB(200, 200, 200)
+            label.TextSize = 10
+            label.TextXAlignment = Enum.TextXAlignment.Left
+            label.Font = Enum.Font.Gotham
+            label.Parent = self.Frame
+            
+            self.CurrentY = self.CurrentY + 25
+            self.Frame.Size = UDim2.new(1, -10, 0, self.CurrentY + 10)
+            
+            return label
+        end
+        
+        -- AddDropdown
+        function section:AddDropdown(config)
+            local dropdownFrame = Instance.new("Frame")
+            dropdownFrame.Size = UDim2.new(1, -10, 0, 30)
+            dropdownFrame.Position = UDim2.new(0, 5, 0, self.CurrentY)
+            dropdownFrame.BackgroundTransparency = 1
+            dropdownFrame.Parent = self.Frame
+            
+            local labelText = Instance.new("TextLabel")
+            labelText.Size = UDim2.new(0.35, 0, 1, 0)
+            labelText.BackgroundTransparency = 1
+            labelText.Text = config.Name or "Dropdown"
+            labelText.TextColor3 = Color3.fromRGB(220, 220, 220)
+            labelText.TextSize = 11
+            labelText.TextXAlignment = Enum.TextXAlignment.Left
+            labelText.Font = Enum.Font.Gotham
+            labelText.Parent = dropdownFrame
+            
+            local dropdownBtn = Instance.new("TextButton")
+            dropdownBtn.Size = UDim2.new(0.6, 0, 1, 0)
+            dropdownBtn.Position = UDim2.new(0.35, 0, 0, 0)
+            dropdownBtn.BackgroundColor3 = Color3.fromRGB(45, 45, 55)
+            dropdownBtn.Text = config.Default or "Select"
+            dropdownBtn.TextColor3 = Color3.fromRGB(255, 255, 255)
+            dropdownBtn.TextSize = 11
+            dropdownBtn.Font = Enum.Font.Gotham
+            dropdownBtn.Parent = dropdownFrame
+            
+            local btnCorner = Instance.new("UICorner")
+            btnCorner.CornerRadius = UDim.new(0, 4)
+            btnCorner.Parent = dropdownBtn
+            
+            -- Выпадающий список
+            local dropdownList = Instance.new("Frame")
+            dropdownList.Size = UDim2.new(0.6, 0, 0, 100)
+            dropdownList.Position = UDim2.new(0.35, 0, 0, 30)
+            dropdownList.BackgroundColor3 = Color3.fromRGB(35, 35, 45)
+            dropdownList.BackgroundTransparency = 0.1
+            dropdownList.BorderSizePixel = 1
+            dropdownList.BorderColor3 = Color3.fromRGB(100, 100, 100)
+            dropdownList.Visible = false
+            dropdownList.Parent = dropdownFrame
+            
+            local listCorner = Instance.new("UICorner")
+            listCorner.CornerRadius = UDim.new(0, 4)
+            listCorner.Parent = dropdownList
+            
+            local listScroll = Instance.new("ScrollingFrame")
+            listScroll.Size = UDim2.new(1, 0, 1, 0)
+            listScroll.BackgroundTransparency = 1
+            listScroll.BorderSizePixel = 0
+            listScroll.CanvasSize = UDim2.new(0, 0, 0, 0)
+            listScroll.ScrollBarThickness = 4
+            listScroll.Parent = dropdownList
+            
+            local listLayout = Instance.new("UIListLayout")
+            listLayout.Padding = UDim.new(0, 2)
+            listLayout.Parent = listScroll
+            
+            local options = config.Options or {}
+            local selectedValue = config.Default or (options[1] or "")
+            
+            for _, option in ipairs(options) do
+                local optBtn = Instance.new("TextButton")
+                optBtn.Size = UDim2.new(1, 0, 0, 25)
+                optBtn.BackgroundColor3 = Color3.fromRGB(45, 45, 55)
+                optBtn.Text = option
+                optBtn.TextColor3 = Color3.fromRGB(220, 220, 220)
+                optBtn.TextSize = 10
+                optBtn.Font = Enum.Font.Gotham
+                optBtn.Parent = listScroll
+                
+                local optCorner = Instance.new("UICorner")
+                optCorner.CornerRadius = UDim.new(0, 3)
+                optCorner.Parent = optBtn
+                
+                optBtn.MouseButton1Click:Connect(function()
+                    selectedValue = option
+                    dropdownBtn.Text = option
+                    dropdownList.Visible = false
+                    if config.Callback then
+                        config.Callback(option)
+                    end
+                    if config.Flag then
+                        _G[config.Flag] = option
+                    end
+                end)
+            end
+            
+            listScroll.CanvasSize = UDim2.new(0, 0, 0, #options * 27)
+            
+            dropdownBtn.MouseButton1Click:Connect(function()
+                dropdownList.Visible = not dropdownList.Visible
+                if dropdownList.Visible then
+                    local height = math.min(#options * 27, 120)
+                    dropdownList.Size = UDim2.new(0.6, 0, 0, height)
+                else
+                    dropdownList.Size = UDim2.new(0.6, 0, 0, 100)
+                end
+            end)
+            
+            UserInputService.InputBegan:Connect(function(input)
+                if input.UserInputType == Enum.UserInputType.MouseButton1 then
+                    task.wait()
+                    local mousePos = UserInputService:GetMouseLocation()
+                    local absPos = dropdownList.AbsolutePosition
+                    local absSize = dropdownList.AbsoluteSize
+                    if not (mousePos.X >= absPos.X and mousePos.X <= absPos.X + absSize.X and
+                           mousePos.Y >= absPos.Y and mousePos.Y <= absPos.Y + absSize.Y) then
+                        dropdownList.Visible = false
+                    end
+                end
+            end)
+            
+            self.CurrentY = self.CurrentY + 35
+            self.Frame.Size = UDim2.new(1, -10, 0, self.CurrentY + 10)
+            
+            return {GetValue = function() return selectedValue end, SetValue = function(v) selectedValue = v; dropdownBtn.Text = v end}
+        end
+        
+        table.insert(self.Sections, section)
+        
+        return section
     end
-end)
+    
+    return window
+end
 
--- Обновляем CanvasSize
-scrollFrame.CanvasSize = UDim2.new(0, 0, 0, scrollLayout.AbsoluteContentSize.Y)
-
-scrollLayout:GetPropertyChangedSignal("AbsoluteContentSize"):Connect(function()
-    scrollFrame.CanvasSize = UDim2.new(0, 0, 0, scrollLayout.AbsoluteContentSize.Y)
-end)
-
-addOutput("✓ GUI интерфейс загружен! (кнопка ⚙️)", Color3.fromRGB(100, 255, 100))
+return GUI
