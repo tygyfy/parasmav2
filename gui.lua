@@ -150,7 +150,7 @@ function GUI:CreateWindow(config)
         section.TitleLabel.Parent = section.Frame
         
         section.CurrentY = 25
-        section.ScreenGui = self.ScreenGui
+       section.Window = self
         
         -- AddButton
         function section:AddButton(config)
