@@ -258,7 +258,7 @@ function GUI:CreateWindow(config)
             return label
         end
         
-        -- AddDropdown (упрощенная версия без автоматического закрытия)
+        -- AddDropdown (исправленная версия с фиксацией значения)
         function section:AddDropdown(config)
             local dropdownFrame = Instance.new("Frame")
             dropdownFrame.Size = UDim2.new(1, -10, 0, 30)
@@ -290,6 +290,7 @@ function GUI:CreateWindow(config)
             btnCorner.CornerRadius = UDim.new(0, 4)
             btnCorner.Parent = dropdownBtn
             
+            -- Выпадающий список
             local dropdownList = Instance.new("Frame")
             dropdownList.Size = UDim2.new(0.6, 0, 0, 0)
             dropdownList.Position = UDim2.new(0.35, 0, 0, 30)
@@ -321,7 +322,10 @@ function GUI:CreateWindow(config)
             
             dropdownBtn.Text = selectedValue
             
-            for _, option in ipairs(options) do
+            -- Создание кнопок опций - используем функцию-замыкание для фиксации значения
+            for i = 1, #options do
+                local option = options[i]  -- Локальная переменная для каждой итерации
+                
                 local optBtn = Instance.new("TextButton")
                 optBtn.Size = UDim2.new(1, 0, 0, 25)
                 optBtn.BackgroundColor3 = Color3.fromRGB(45, 45, 55)
@@ -335,18 +339,20 @@ function GUI:CreateWindow(config)
                 optCorner.CornerRadius = UDim.new(0, 3)
                 optCorner.Parent = optBtn
                 
-                optBtn.MouseButton1Click:Connect(function()
-                    selectedValue = option
-                    dropdownBtn.Text = option
-                    dropdownList.Visible = false
-                    print("Выбрано:", option) -- Отладочный вывод
-                    if config.Callback then
-                        config.Callback(option)
-                    end
-                    if config.Flag then
-                        _G[config.Flag] = option
-                    end
-                end)
+                -- Используем немедленно вызываемую функцию для фиксации значения
+                (function(optValue)
+                    optBtn.MouseButton1Click:Connect(function()
+                        selectedValue = optValue
+                        dropdownBtn.Text = optValue
+                        dropdownList.Visible = false
+                        if config.Callback then
+                            config.Callback(optValue)
+                        end
+                        if config.Flag then
+                            _G[config.Flag] = optValue
+                        end
+                    end)
+                end)(option)
             end
             
             local count = #options
@@ -354,6 +360,7 @@ function GUI:CreateWindow(config)
             dropdownList.Size = UDim2.new(0.6, 0, 0, height)
             listScroll.CanvasSize = UDim2.new(0, 0, 0, count * 27)
             
+            -- Открытие/закрытие списка
             dropdownBtn.MouseButton1Click:Connect(function()
                 dropdownList.Visible = not dropdownList.Visible
             end)
