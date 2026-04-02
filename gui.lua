@@ -325,7 +325,7 @@ function GUI:CreateWindow(config)
             }
         end
         
-        -- AddDropdown (исправленная версия - список поверх всего с работающими кликами)
+        -- AddDropdown (упрощенная версия - без self.Window)
         function section:AddDropdown(config)
             local dropdownFrame = Instance.new("Frame")
             dropdownFrame.Size = UDim2.new(1, -10, 0, 30)
@@ -358,10 +358,11 @@ function GUI:CreateWindow(config)
             btnCorner.CornerRadius = UDim.new(0, 4)
             btnCorner.Parent = dropdownBtn
             
-            -- Получаем ScreenGui
-            local screenGui = self.Window.ScreenGui
+            -- Получаем ScreenGui через LocalPlayer
+            local LocalPlayer = game:GetService("Players").LocalPlayer
+            local screenGui = LocalPlayer:WaitForChild("PlayerGui")
             
-            -- СОЗДАЕМ КОНТЕЙНЕР ДЛЯ СПИСКА (отдельный ScreenGui для гарантии поверх всего)
+            -- СОЗДАЕМ КОНТЕЙНЕР ДЛЯ СПИСКА
             local dropdownContainer = Instance.new("ScreenGui")
             dropdownContainer.Name = "DropdownContainer"
             dropdownContainer.ResetOnSpawn = false
@@ -475,12 +476,12 @@ function GUI:CreateWindow(config)
                     updateListPosition()
                     dropdownContainer.Enabled = true
                     dropdownList.Visible = true
-                    -- Поднимаем контейнер наверх
                     dropdownContainer.DisplayOrder = 100
                 end
             end)
             
             -- Закрытие списка при клике вне его
+            local UserInputService = game:GetService("UserInputService")
             local function onGlobalClick(input)
                 if input.UserInputType == Enum.UserInputType.MouseButton1 then
                     task.wait(0.05)
@@ -507,18 +508,10 @@ function GUI:CreateWindow(config)
             
             UserInputService.InputBegan:Connect(onGlobalClick)
             
-            -- Обновляем позицию при скролле
-            if self.Window and self.Window.ScrollFrame then
-                self.Window.ScrollFrame:GetPropertyChangedSignal("CanvasPosition"):Connect(function()
-                    if dropdownList.Visible then
-                        updateListPosition()
-                    end
-                end)
-            end
-            
-            -- При изменении размера окна
-            if self.Window and self.Window.MainPanel then
-                self.Window.MainPanel:GetPropertyChangedSignal("AbsoluteSize"):Connect(function()
+            -- Обновляем позицию при скролле (если есть ScrollFrame)
+            local scrollFrame = self.Window and self.Window.ScrollFrame
+            if scrollFrame then
+                scrollFrame:GetPropertyChangedSignal("CanvasPosition"):Connect(function()
                     if dropdownList.Visible then
                         updateListPosition()
                     end
@@ -541,7 +534,6 @@ function GUI:CreateWindow(config)
                     end
                 end,
                 SetOptions = function(newOptions)
-                    -- Очищаем старые кнопки
                     for _, child in ipairs(listScroll:GetChildren()) do
                         if child:IsA("TextButton") then
                             child:Destroy()
@@ -553,7 +545,6 @@ function GUI:CreateWindow(config)
                         table.insert(options, opt)
                     end
                     
-                    -- Создаем новые кнопки
                     for i = 1, #options do
                         local optValue = options[i]
                         
