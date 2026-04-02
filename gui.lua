@@ -325,7 +325,7 @@ function GUI:CreateWindow(config)
             }
         end
         
-        -- AddDropdown (упрощенная версия - без self.Window)
+        -- AddDropdown (упрощенная версия - исправленная)
         function section:AddDropdown(config)
             local dropdownFrame = Instance.new("Frame")
             dropdownFrame.Size = UDim2.new(1, -10, 0, 30)
@@ -423,6 +423,9 @@ function GUI:CreateWindow(config)
                 dropdownList.Position = UDim2.new(0, btnAbsPos.X + 35, 0, btnAbsPos.Y + btnAbsSize.Y)
             end
             
+            -- Флаг для предотвращения двойного закрытия
+            local isSelecting = false
+            
             -- Создание кнопок опций
             for i = 1, #options do
                 local optValue = options[i]
@@ -454,6 +457,7 @@ function GUI:CreateWindow(config)
                 end)
                 
                 optBtn.MouseButton1Click:Connect(function()
+                    isSelecting = true
                     selectedValue = optValue
                     dropdownBtn.Text = optValue
                     dropdownList.Visible = false
@@ -464,6 +468,8 @@ function GUI:CreateWindow(config)
                     if config.Flag then
                         _G[config.Flag] = optValue
                     end
+                    task.wait(0.1)
+                    isSelecting = false
                 end)
             end
             
@@ -484,6 +490,10 @@ function GUI:CreateWindow(config)
             local UserInputService = game:GetService("UserInputService")
             local function onGlobalClick(input)
                 if input.UserInputType == Enum.UserInputType.MouseButton1 then
+                    -- Не закрываем, если идет выбор опции
+                    if isSelecting then return end
+                    
+                    -- Даем время на обработку клика по кнопке
                     task.wait(0.05)
                     if not dropdownList.Visible then return end
                     
@@ -508,7 +518,7 @@ function GUI:CreateWindow(config)
             
             UserInputService.InputBegan:Connect(onGlobalClick)
             
-            -- Обновляем позицию при скролле (если есть ScrollFrame)
+            -- Обновляем позицию при скролле
             local scrollFrame = self.Window and self.Window.ScrollFrame
             if scrollFrame then
                 scrollFrame:GetPropertyChangedSignal("CanvasPosition"):Connect(function()
@@ -574,6 +584,7 @@ function GUI:CreateWindow(config)
                         end)
                         
                         optBtn.MouseButton1Click:Connect(function()
+                            isSelecting = true
                             selectedValue = optValue
                             dropdownBtn.Text = optValue
                             dropdownList.Visible = false
@@ -584,6 +595,8 @@ function GUI:CreateWindow(config)
                             if config.Flag then
                                 _G[config.Flag] = optValue
                             end
+                            task.wait(0.1)
+                            isSelecting = false
                         end)
                     end
                     
