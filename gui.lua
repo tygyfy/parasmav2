@@ -258,7 +258,7 @@ function GUI:CreateWindow(config)
             return label
         end
         
-        -- AddDropdown (исправленная версия)
+        -- AddDropdown (полностью исправленная версия)
         function section:AddDropdown(config)
             local dropdownFrame = Instance.new("Frame")
             dropdownFrame.Size = UDim2.new(1, -10, 0, 30)
@@ -320,12 +320,11 @@ function GUI:CreateWindow(config)
             local options = config.Options or {}
             local selectedValue = config.Default or (options[1] or "")
             
-            -- Устанавливаем начальное значение на кнопке
+            -- Устанавливаем начальное значение
             dropdownBtn.Text = selectedValue
             
             -- Создание кнопок опций
-            for i = 1, #options do
-                local option = options[i]
+            for _, option in ipairs(options) do
                 local optBtn = Instance.new("TextButton")
                 optBtn.Size = UDim2.new(1, 0, 0, 25)
                 optBtn.BackgroundColor3 = Color3.fromRGB(45, 45, 55)
@@ -339,18 +338,16 @@ function GUI:CreateWindow(config)
                 optCorner.CornerRadius = UDim.new(0, 3)
                 optCorner.Parent = optBtn
                 
-                -- Сохраняем значение опции в замыкании
-                local selectedOption = option
+                -- Используем значение опции напрямую
                 optBtn.MouseButton1Click:Connect(function()
-                    selectedValue = selectedOption
-                    dropdownBtn.Text = selectedOption
+                    selectedValue = option
+                    dropdownBtn.Text = option
                     dropdownList.Visible = false
-                    dropdownList.Size = UDim2.new(0.6, 0, 0, 100)
                     if config.Callback then
-                        config.Callback(selectedOption)
+                        config.Callback(option)
                     end
                     if config.Flag then
-                        _G[config.Flag] = selectedOption
+                        _G[config.Flag] = option
                     end
                 end)
             end
@@ -358,9 +355,11 @@ function GUI:CreateWindow(config)
             listScroll.CanvasSize = UDim2.new(0, 0, 0, #options * 27)
             
             -- Открытие/закрытие списка
+            local listOpen = false
             dropdownBtn.MouseButton1Click:Connect(function()
-                dropdownList.Visible = not dropdownList.Visible
-                if dropdownList.Visible then
+                listOpen = not listOpen
+                dropdownList.Visible = listOpen
+                if listOpen then
                     local height = math.min(#options * 27, 120)
                     dropdownList.Size = UDim2.new(0.6, 0, 0, height)
                 else
@@ -368,18 +367,36 @@ function GUI:CreateWindow(config)
                 end
             end)
             
-            -- Закрытие списка при клике вне его
+            -- Закрытие списка при клике вне его (с задержкой, чтобы кнопка успела сработать)
+            local function closeDropdown()
+                if listOpen then
+                    listOpen = false
+                    dropdownList.Visible = false
+                    dropdownList.Size = UDim2.new(0.6, 0, 0, 100)
+                end
+            end
+            
             UserInputService.InputBegan:Connect(function(input)
                 if input.UserInputType == Enum.UserInputType.MouseButton1 then
-                    task.wait()
+                    -- Даем время кнопке опции сработать
+                    task.wait(0.05)
                     if dropdownList and dropdownList.Parent then
                         local mousePos = UserInputService:GetMouseLocation()
                         local absPos = dropdownList.AbsolutePosition
                         local absSize = dropdownList.AbsoluteSize
-                        if not (mousePos.X >= absPos.X and mousePos.X <= absPos.X + absSize.X and
-                               mousePos.Y >= absPos.Y and mousePos.Y <= absPos.Y + absSize.Y) then
-                            dropdownList.Visible = false
-                            dropdownList.Size = UDim2.new(0.6, 0, 0, 100)
+                        local btnAbsPos = dropdownBtn.AbsolutePosition
+                        local btnAbsSize = dropdownBtn.AbsoluteSize
+                        
+                        -- Проверяем, не кликнули ли по кнопке-дропдауну
+                        local clickedOnButton = (mousePos.X >= btnAbsPos.X and mousePos.X <= btnAbsPos.X + btnAbsSize.X and
+                                                mousePos.Y >= btnAbsPos.Y and mousePos.Y <= btnAbsPos.Y + btnAbsSize.Y)
+                        
+                        -- Проверяем, не кликнули ли по списку
+                        local clickedOnList = (mousePos.X >= absPos.X and mousePos.X <= absPos.X + absSize.X and
+                                              mousePos.Y >= absPos.Y and mousePos.Y <= absPos.Y + absSize.Y)
+                        
+                        if not clickedOnButton and not clickedOnList then
+                            closeDropdown()
                         end
                     end
                 end
