@@ -324,7 +324,7 @@ function GUI:CreateWindow(config)
             }
         end
         
-        -- AddDropdown (исправленная версия с фиксацией значения)
+        -- AddDropdown (исправленная версия - список поверх всего)
         function section:AddDropdown(config)
             local dropdownFrame = Instance.new("Frame")
             dropdownFrame.Size = UDim2.new(1, -10, 0, 30)
@@ -356,16 +356,17 @@ function GUI:CreateWindow(config)
             btnCorner.CornerRadius = UDim.new(0, 4)
             btnCorner.Parent = dropdownBtn
             
-            -- Выпадающий список
+            -- СОЗДАЕМ СПИСОК НА УРОВНЕ ScreenGui (поверх всего)
             local dropdownList = Instance.new("Frame")
-            dropdownList.Size = UDim2.new(0.6, 0, 0, 0)
-            dropdownList.Position = UDim2.new(0.35, 0, 0, 30)
+            dropdownList.Size = UDim2.new(0, 0, 0, 0)
+            dropdownList.Position = UDim2.new(0, 0, 0, 0)
             dropdownList.BackgroundColor3 = Color3.fromRGB(35, 35, 45)
             dropdownList.BackgroundTransparency = 0.1
             dropdownList.BorderSizePixel = 1
             dropdownList.BorderColor3 = Color3.fromRGB(100, 100, 100)
             dropdownList.Visible = false
-            dropdownList.Parent = dropdownFrame
+            dropdownList.Parent = self.Window.ScreenGui  -- Родитель - ScreenGui, а не dropdownFrame
+            dropdownList.ZIndex = 100  -- Высокий ZIndex для отображения поверх всего
             
             local listCorner = Instance.new("UICorner")
             listCorner.CornerRadius = UDim.new(0, 4)
@@ -388,9 +389,23 @@ function GUI:CreateWindow(config)
             
             dropdownBtn.Text = selectedValue
             
+            -- Функция для обновления позиции списка
+            local function updateListPosition()
+                local btnAbsPos = dropdownBtn.AbsolutePosition
+                local btnAbsSize = dropdownBtn.AbsoluteSize
+                
+                -- Получаем абсолютную позицию кнопки относительно экрана
+                local listWidth = 200
+                local listHeight = math.min(#options * 27, 120)
+                
+                -- Позиционируем список под кнопкой
+                dropdownList.Size = UDim2.new(0, listWidth, 0, listHeight)
+                dropdownList.Position = UDim2.new(0, btnAbsPos.X + 35, 0, btnAbsPos.Y + btnAbsSize.Y)
+            end
+            
             -- Создание кнопок опций
             for i = 1, #options do
-                local optValue = options[i]  -- Локальная переменная для каждой итерации
+                local optValue = options[i]
                 
                 local optBtn = Instance.new("TextButton")
                 optBtn.Size = UDim2.new(1, 0, 0, 25)
@@ -418,14 +433,59 @@ function GUI:CreateWindow(config)
                 end)
             end
             
-            local count = #options
-            local height = math.min(count * 27, 120)
-            dropdownList.Size = UDim2.new(0.6, 0, 0, height)
-            listScroll.CanvasSize = UDim2.new(0, 0, 0, count * 27)
+            local function updateListHeight()
+                local count = #options
+                if count > 0 then
+                    local height = math.min(count * 27, 120)
+                    dropdownList.Size = UDim2.new(0.6, 0, 0, height)
+                    listScroll.CanvasSize = UDim2.new(0, 0, 0, count * 27)
+                end
+            end
+            
+            updateListHeight()
             
             -- Открытие/закрытие списка
             dropdownBtn.MouseButton1Click:Connect(function()
-                dropdownList.Visible = not dropdownList.Visible
+                if dropdownList.Visible then
+                    dropdownList.Visible = false
+                else
+                    updateListPosition()
+                    dropdownList.Visible = true
+                end
+            end)
+            
+            -- Закрытие списка при клике вне его
+            local function onGlobalClick(input)
+                if input.UserInputType == Enum.UserInputType.MouseButton1 then
+                    task.wait()
+                    if not dropdownList.Visible then return end
+                    
+                    local mousePos = UserInputService:GetMouseLocation()
+                    
+                    local btnAbsPos = dropdownBtn.AbsolutePosition
+                    local btnAbsSize = dropdownBtn.AbsoluteSize
+                    local clickedOnButton = (mousePos.X >= btnAbsPos.X and mousePos.X <= btnAbsPos.X + btnAbsSize.X and
+                                            mousePos.Y >= btnAbsPos.Y and mousePos.Y <= btnAbsPos.Y + btnAbsSize.Y)
+                    
+                    local listAbsPos = dropdownList.AbsolutePosition
+                    local listAbsSize = dropdownList.AbsoluteSize
+                    local clickedOnList = (mousePos.X >= listAbsPos.X and mousePos.X <= listAbsPos.X + listAbsSize.X and
+                                          mousePos.Y >= listAbsPos.Y and mousePos.Y <= listAbsPos.Y + listAbsSize.Y)
+                    
+                    if not clickedOnButton and not clickedOnList then
+                        dropdownList.Visible = false
+                    end
+                end
+            end
+            
+            UserInputService.InputBegan:Connect(onGlobalClick)
+            
+            -- Обновляем позицию при скролле окна
+            local scrollFrame = self.Window.ScrollFrame
+            scrollFrame:GetPropertyChangedSignal("CanvasPosition"):Connect(function()
+                if dropdownList.Visible then
+                    updateListPosition()
+                end
             end)
             
             self.CurrentY = self.CurrentY + 35
@@ -442,6 +502,51 @@ function GUI:CreateWindow(config)
                     if config.Flag then
                         _G[config.Flag] = v
                     end
+                end,
+                SetOptions = function(newOptions)
+                    -- Очищаем старые кнопки
+                    for _, child in ipairs(listScroll:GetChildren()) do
+                        if child:IsA("TextButton") then
+                            child:Destroy()
+                        end
+                    end
+                    
+                    options = newOptions
+                    
+                    -- Создаем новые кнопки
+                    for i = 1, #options do
+                        local optValue = options[i]
+                        
+                        local optBtn = Instance.new("TextButton")
+                        optBtn.Size = UDim2.new(1, 0, 0, 25)
+                        optBtn.BackgroundColor3 = Color3.fromRGB(45, 45, 55)
+                        optBtn.Text = optValue
+                        optBtn.TextColor3 = Color3.fromRGB(220, 220, 220)
+                        optBtn.TextSize = 10
+                        optBtn.Font = Enum.Font.Gotham
+                        optBtn.Parent = listScroll
+                        
+                        local optCorner = Instance.new("UICorner")
+                        optCorner.CornerRadius = UDim.new(0, 3)
+                        optCorner.Parent = optBtn
+                        
+                        optBtn.MouseButton1Click:Connect(function()
+                            selectedValue = optValue
+                            dropdownBtn.Text = optValue
+                            dropdownList.Visible = false
+                            if config.Callback then
+                                config.Callback(optValue)
+                            end
+                            if config.Flag then
+                                _G[config.Flag] = optValue
+                            end
+                        end)
+                    end
+                    
+                    local count = #options
+                    local height = math.min(count * 27, 120)
+                    dropdownList.Size = UDim2.new(0.6, 0, 0, height)
+                    listScroll.CanvasSize = UDim2.new(0, 0, 0, count * 27)
                 end
             }
         end
