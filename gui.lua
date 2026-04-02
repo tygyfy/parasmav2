@@ -365,8 +365,8 @@ function GUI:CreateWindow(config)
             dropdownList.BorderSizePixel = 1
             dropdownList.BorderColor3 = Color3.fromRGB(100, 100, 100)
             dropdownList.Visible = false
-            dropdownList.Parent = self.Window.ScreenGui  -- Родитель - ScreenGui, а не dropdownFrame
-            dropdownList.ZIndex = 100  -- Высокий ZIndex для отображения поверх всего
+            dropdownList.Parent = self.ScreenGui  -- Используем ScreenGui из секции
+            dropdownList.ZIndex = 100
             
             local listCorner = Instance.new("UICorner")
             listCorner.CornerRadius = UDim.new(0, 4)
@@ -384,7 +384,10 @@ function GUI:CreateWindow(config)
             listLayout.Padding = UDim.new(0, 2)
             listLayout.Parent = listScroll
             
-            local options = config.Options or {}
+            local options = {}
+            for _, opt in ipairs(config.Options or {}) do
+                table.insert(options, opt)
+            end
             local selectedValue = config.Default or (options[1] or "")
             
             dropdownBtn.Text = selectedValue
@@ -394,11 +397,9 @@ function GUI:CreateWindow(config)
                 local btnAbsPos = dropdownBtn.AbsolutePosition
                 local btnAbsSize = dropdownBtn.AbsoluteSize
                 
-                -- Получаем абсолютную позицию кнопки относительно экрана
                 local listWidth = 200
                 local listHeight = math.min(#options * 27, 120)
                 
-                -- Позиционируем список под кнопкой
                 dropdownList.Size = UDim2.new(0, listWidth, 0, listHeight)
                 dropdownList.Position = UDim2.new(0, btnAbsPos.X + 35, 0, btnAbsPos.Y + btnAbsSize.Y)
             end
@@ -437,7 +438,7 @@ function GUI:CreateWindow(config)
                 local count = #options
                 if count > 0 then
                     local height = math.min(count * 27, 120)
-                    dropdownList.Size = UDim2.new(0.6, 0, 0, height)
+                    dropdownList.Size = UDim2.new(0, 200, 0, height)
                     listScroll.CanvasSize = UDim2.new(0, 0, 0, count * 27)
                 end
             end
@@ -481,12 +482,13 @@ function GUI:CreateWindow(config)
             UserInputService.InputBegan:Connect(onGlobalClick)
             
             -- Обновляем позицию при скролле окна
-            local scrollFrame = self.Window.ScrollFrame
-            scrollFrame:GetPropertyChangedSignal("CanvasPosition"):Connect(function()
-                if dropdownList.Visible then
-                    updateListPosition()
-                end
-            end)
+            if self.Window and self.Window.ScrollFrame then
+                self.Window.ScrollFrame:GetPropertyChangedSignal("CanvasPosition"):Connect(function()
+                    if dropdownList.Visible then
+                        updateListPosition()
+                    end
+                end)
+            end
             
             self.CurrentY = self.CurrentY + 35
             self.Frame.Size = UDim2.new(1, -10, 0, self.CurrentY + 10)
@@ -511,9 +513,11 @@ function GUI:CreateWindow(config)
                         end
                     end
                     
-                    options = newOptions
+                    options = {}
+                    for _, opt in ipairs(newOptions) do
+                        table.insert(options, opt)
+                    end
                     
-                    -- Создаем новые кнопки
                     for i = 1, #options do
                         local optValue = options[i]
                         
@@ -545,7 +549,7 @@ function GUI:CreateWindow(config)
                     
                     local count = #options
                     local height = math.min(count * 27, 120)
-                    dropdownList.Size = UDim2.new(0.6, 0, 0, height)
+                    dropdownList.Size = UDim2.new(0, 200, 0, height)
                     listScroll.CanvasSize = UDim2.new(0, 0, 0, count * 27)
                 end
             }
