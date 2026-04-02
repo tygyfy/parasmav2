@@ -325,7 +325,7 @@ function GUI:CreateWindow(config)
             }
         end
         
-        -- AddDropdown (исправленная версия - список поверх всего)
+        -- AddDropdown (исправленная версия - список поверх всего с работающими кликами)
         function section:AddDropdown(config)
             local dropdownFrame = Instance.new("Frame")
             dropdownFrame.Size = UDim2.new(1, -10, 0, 30)
@@ -352,34 +352,50 @@ function GUI:CreateWindow(config)
             dropdownBtn.TextSize = 11
             dropdownBtn.Font = Enum.Font.Gotham
             dropdownBtn.Parent = dropdownFrame
+            dropdownBtn.ZIndex = 2
             
             local btnCorner = Instance.new("UICorner")
             btnCorner.CornerRadius = UDim.new(0, 4)
             btnCorner.Parent = dropdownBtn
             
-            -- СОЗДАЕМ СПИСОК НА УРОВНЕ ScreenGui (поверх всего)
+            -- Получаем ScreenGui
+            local screenGui = self.Window.ScreenGui
+            
+            -- СОЗДАЕМ КОНТЕЙНЕР ДЛЯ СПИСКА (отдельный ScreenGui для гарантии поверх всего)
+            local dropdownContainer = Instance.new("ScreenGui")
+            dropdownContainer.Name = "DropdownContainer"
+            dropdownContainer.ResetOnSpawn = false
+            dropdownContainer.Parent = screenGui
+            dropdownContainer.ZIndexBehavior = Enum.ZIndexBehavior.Global
+            dropdownContainer.Enabled = true
+            
+            -- Выпадающий список
             local dropdownList = Instance.new("Frame")
             dropdownList.Size = UDim2.new(0, 0, 0, 0)
             dropdownList.Position = UDim2.new(0, 0, 0, 0)
             dropdownList.BackgroundColor3 = Color3.fromRGB(35, 35, 45)
-            dropdownList.BackgroundTransparency = 0.1
+            dropdownList.BackgroundTransparency = 0.05
             dropdownList.BorderSizePixel = 1
-            dropdownList.BorderColor3 = Color3.fromRGB(100, 100, 100)
+            dropdownList.BorderColor3 = Color3.fromRGB(150, 150, 150)
             dropdownList.Visible = false
-            dropdownList.Parent = self.ScreenGui  -- Используем ScreenGui из секции
-            dropdownList.ZIndex = 100
+            dropdownList.Parent = dropdownContainer
+            dropdownList.ZIndex = 1000
+            dropdownList.Active = true
+            dropdownList.Selectable = true
             
             local listCorner = Instance.new("UICorner")
             listCorner.CornerRadius = UDim.new(0, 4)
             listCorner.Parent = dropdownList
             
             local listScroll = Instance.new("ScrollingFrame")
-            listScroll.Size = UDim2.new(1, 0, 1, 0)
+            listScroll.Size = UDim2.new(1, -2, 1, -2)
+            listScroll.Position = UDim2.new(0, 1, 0, 1)
             listScroll.BackgroundTransparency = 1
             listScroll.BorderSizePixel = 0
             listScroll.CanvasSize = UDim2.new(0, 0, 0, 0)
-            listScroll.ScrollBarThickness = 4
+            listScroll.ScrollBarThickness = 6
             listScroll.Parent = dropdownList
+            listScroll.ZIndex = 1001
             
             local listLayout = Instance.new("UIListLayout")
             listLayout.Padding = UDim.new(0, 2)
@@ -398,10 +414,11 @@ function GUI:CreateWindow(config)
                 local btnAbsPos = dropdownBtn.AbsolutePosition
                 local btnAbsSize = dropdownBtn.AbsoluteSize
                 
-                local listWidth = 200
-                local listHeight = math.min(#options * 27, 120)
+                local listWidth = 210
+                local listHeight = math.min(#options * 27, 150)
                 
                 dropdownList.Size = UDim2.new(0, listWidth, 0, listHeight)
+                listScroll.CanvasSize = UDim2.new(0, 0, 0, #options * 27)
                 dropdownList.Position = UDim2.new(0, btnAbsPos.X + 35, 0, btnAbsPos.Y + btnAbsSize.Y)
             end
             
@@ -410,22 +427,36 @@ function GUI:CreateWindow(config)
                 local optValue = options[i]
                 
                 local optBtn = Instance.new("TextButton")
-                optBtn.Size = UDim2.new(1, 0, 0, 25)
+                optBtn.Size = UDim2.new(1, -4, 0, 25)
+                optBtn.Position = UDim2.new(0, 2, 0, 0)
                 optBtn.BackgroundColor3 = Color3.fromRGB(45, 45, 55)
+                optBtn.BackgroundTransparency = 0
                 optBtn.Text = optValue
                 optBtn.TextColor3 = Color3.fromRGB(220, 220, 220)
-                optBtn.TextSize = 10
+                optBtn.TextSize = 11
                 optBtn.Font = Enum.Font.Gotham
                 optBtn.Parent = listScroll
+                optBtn.ZIndex = 1002
+                optBtn.AutoButtonColor = true
                 
                 local optCorner = Instance.new("UICorner")
                 optCorner.CornerRadius = UDim.new(0, 3)
                 optCorner.Parent = optBtn
                 
+                -- Эффект при наведении
+                optBtn.MouseEnter:Connect(function()
+                    optBtn.BackgroundColor3 = Color3.fromRGB(65, 65, 80)
+                end)
+                
+                optBtn.MouseLeave:Connect(function()
+                    optBtn.BackgroundColor3 = Color3.fromRGB(45, 45, 55)
+                end)
+                
                 optBtn.MouseButton1Click:Connect(function()
                     selectedValue = optValue
                     dropdownBtn.Text = optValue
                     dropdownList.Visible = false
+                    dropdownContainer.Enabled = false
                     if config.Callback then
                         config.Callback(optValue)
                     end
@@ -435,31 +466,24 @@ function GUI:CreateWindow(config)
                 end)
             end
             
-            local function updateListHeight()
-                local count = #options
-                if count > 0 then
-                    local height = math.min(count * 27, 120)
-                    dropdownList.Size = UDim2.new(0, 200, 0, height)
-                    listScroll.CanvasSize = UDim2.new(0, 0, 0, count * 27)
-                end
-            end
-            
-            updateListHeight()
-            
             -- Открытие/закрытие списка
             dropdownBtn.MouseButton1Click:Connect(function()
                 if dropdownList.Visible then
                     dropdownList.Visible = false
+                    dropdownContainer.Enabled = false
                 else
                     updateListPosition()
+                    dropdownContainer.Enabled = true
                     dropdownList.Visible = true
+                    -- Поднимаем контейнер наверх
+                    dropdownContainer.DisplayOrder = 100
                 end
             end)
             
             -- Закрытие списка при клике вне его
             local function onGlobalClick(input)
                 if input.UserInputType == Enum.UserInputType.MouseButton1 then
-                    task.wait()
+                    task.wait(0.05)
                     if not dropdownList.Visible then return end
                     
                     local mousePos = UserInputService:GetMouseLocation()
@@ -476,15 +500,25 @@ function GUI:CreateWindow(config)
                     
                     if not clickedOnButton and not clickedOnList then
                         dropdownList.Visible = false
+                        dropdownContainer.Enabled = false
                     end
                 end
             end
             
             UserInputService.InputBegan:Connect(onGlobalClick)
             
-            -- Обновляем позицию при скролле окна
+            -- Обновляем позицию при скролле
             if self.Window and self.Window.ScrollFrame then
                 self.Window.ScrollFrame:GetPropertyChangedSignal("CanvasPosition"):Connect(function()
+                    if dropdownList.Visible then
+                        updateListPosition()
+                    end
+                end)
+            end
+            
+            -- При изменении размера окна
+            if self.Window and self.Window.MainPanel then
+                self.Window.MainPanel:GetPropertyChangedSignal("AbsoluteSize"):Connect(function()
                     if dropdownList.Visible then
                         updateListPosition()
                     end
@@ -519,26 +553,40 @@ function GUI:CreateWindow(config)
                         table.insert(options, opt)
                     end
                     
+                    -- Создаем новые кнопки
                     for i = 1, #options do
                         local optValue = options[i]
                         
                         local optBtn = Instance.new("TextButton")
-                        optBtn.Size = UDim2.new(1, 0, 0, 25)
+                        optBtn.Size = UDim2.new(1, -4, 0, 25)
+                        optBtn.Position = UDim2.new(0, 2, 0, 0)
                         optBtn.BackgroundColor3 = Color3.fromRGB(45, 45, 55)
+                        optBtn.BackgroundTransparency = 0
                         optBtn.Text = optValue
                         optBtn.TextColor3 = Color3.fromRGB(220, 220, 220)
-                        optBtn.TextSize = 10
+                        optBtn.TextSize = 11
                         optBtn.Font = Enum.Font.Gotham
                         optBtn.Parent = listScroll
+                        optBtn.ZIndex = 1002
+                        optBtn.AutoButtonColor = true
                         
                         local optCorner = Instance.new("UICorner")
                         optCorner.CornerRadius = UDim.new(0, 3)
                         optCorner.Parent = optBtn
                         
+                        optBtn.MouseEnter:Connect(function()
+                            optBtn.BackgroundColor3 = Color3.fromRGB(65, 65, 80)
+                        end)
+                        
+                        optBtn.MouseLeave:Connect(function()
+                            optBtn.BackgroundColor3 = Color3.fromRGB(45, 45, 55)
+                        end)
+                        
                         optBtn.MouseButton1Click:Connect(function()
                             selectedValue = optValue
                             dropdownBtn.Text = optValue
                             dropdownList.Visible = false
+                            dropdownContainer.Enabled = false
                             if config.Callback then
                                 config.Callback(optValue)
                             end
@@ -549,8 +597,8 @@ function GUI:CreateWindow(config)
                     end
                     
                     local count = #options
-                    local height = math.min(count * 27, 120)
-                    dropdownList.Size = UDim2.new(0, 200, 0, height)
+                    local height = math.min(count * 27, 150)
+                    dropdownList.Size = UDim2.new(0, 210, 0, height)
                     listScroll.CanvasSize = UDim2.new(0, 0, 0, count * 27)
                 end
             }
