@@ -257,6 +257,72 @@ function GUI:CreateWindow(config)
             
             return label
         end
+
+        -- AddTextbox (поле для ввода данных)
+        function section:AddTextbox(config)
+            local textboxFrame = Instance.new("Frame")
+            textboxFrame.Size = UDim2.new(1, -10, 0, 30)
+            textboxFrame.Position = UDim2.new(0, 5, 0, self.CurrentY)
+            textboxFrame.BackgroundTransparency = 1
+            textboxFrame.Parent = self.Frame
+            
+            local labelText = Instance.new("TextLabel")
+            labelText.Size = UDim2.new(0.35, 0, 1, 0)
+            labelText.BackgroundTransparency = 1
+            labelText.Text = config.Name or "Input"
+            labelText.TextColor3 = Color3.fromRGB(220, 220, 220)
+            labelText.TextSize = 11
+            labelText.TextXAlignment = Enum.TextXAlignment.Left
+            labelText.Font = Enum.Font.Gotham
+            labelText.Parent = textboxFrame
+            
+            local inputBox = Instance.new("TextBox")
+            inputBox.Size = UDim2.new(0.6, 0, 1, 0)
+            inputBox.Position = UDim2.new(0.35, 0, 0, 0)
+            inputBox.BackgroundColor3 = Color3.fromRGB(45, 45, 55)
+            inputBox.Text = config.Default or ""
+            inputBox.PlaceholderText = config.Placeholder or "Введите значение..."
+            inputBox.TextColor3 = Color3.fromRGB(255, 255, 255)
+            inputBox.TextSize = 11
+            inputBox.Font = Enum.Font.Gotham
+            inputBox.Parent = textboxFrame
+            
+            local inputCorner = Instance.new("UICorner")
+            inputCorner.CornerRadius = UDim.new(0, 4)
+            inputCorner.Parent = inputBox
+            
+            local currentValue = inputBox.Text
+            
+            -- Обработка ввода (по Enter или по потере фокуса)
+            inputBox.FocusLost:Connect(function(enterPressed)
+                if enterPressed then
+                    currentValue = inputBox.Text
+                    if config.Callback then
+                        config.Callback(currentValue)
+                    end
+                    if config.Flag then
+                        _G[config.Flag] = currentValue
+                    end
+                end
+            end)
+            
+            self.CurrentY = self.CurrentY + 35
+            self.Frame.Size = UDim2.new(1, -10, 0, self.CurrentY + 10)
+            
+            return {
+                GetValue = function() return currentValue end,
+                SetValue = function(v)
+                    currentValue = v
+                    inputBox.Text = v
+                    if config.Callback then
+                        config.Callback(v)
+                    end
+                    if config.Flag then
+                        _G[config.Flag] = v
+                    end
+                end
+            }
+        end
         
         -- AddDropdown (исправленная версия с фиксацией значения)
         function section:AddDropdown(config)
