@@ -258,7 +258,7 @@ function GUI:CreateWindow(config)
             return label
         end
         
-        -- AddDropdown (полностью исправленная версия)
+               -- AddDropdown (полностью переписанная версия)
         function section:AddDropdown(config)
             local dropdownFrame = Instance.new("Frame")
             dropdownFrame.Size = UDim2.new(1, -10, 0, 30)
@@ -292,7 +292,7 @@ function GUI:CreateWindow(config)
             
             -- Выпадающий список
             local dropdownList = Instance.new("Frame")
-            dropdownList.Size = UDim2.new(0.6, 0, 0, 100)
+            dropdownList.Size = UDim2.new(0.6, 0, 0, 0)
             dropdownList.Position = UDim2.new(0.35, 0, 0, 30)
             dropdownList.BackgroundColor3 = Color3.fromRGB(35, 35, 45)
             dropdownList.BackgroundTransparency = 0.1
@@ -300,6 +300,7 @@ function GUI:CreateWindow(config)
             dropdownList.BorderColor3 = Color3.fromRGB(100, 100, 100)
             dropdownList.Visible = false
             dropdownList.Parent = dropdownFrame
+            dropdownList.ZIndex = 10
             
             local listCorner = Instance.new("UICorner")
             listCorner.CornerRadius = UDim.new(0, 4)
@@ -320,11 +321,10 @@ function GUI:CreateWindow(config)
             local options = config.Options or {}
             local selectedValue = config.Default or (options[1] or "")
             
-            -- Устанавливаем начальное значение
             dropdownBtn.Text = selectedValue
             
             -- Создание кнопок опций
-            for _, option in ipairs(options) do
+            for i, option in ipairs(options) do
                 local optBtn = Instance.new("TextButton")
                 optBtn.Size = UDim2.new(1, 0, 0, 25)
                 optBtn.BackgroundColor3 = Color3.fromRGB(45, 45, 55)
@@ -333,12 +333,12 @@ function GUI:CreateWindow(config)
                 optBtn.TextSize = 10
                 optBtn.Font = Enum.Font.Gotham
                 optBtn.Parent = listScroll
+                optBtn.ZIndex = 11
                 
                 local optCorner = Instance.new("UICorner")
                 optCorner.CornerRadius = UDim.new(0, 3)
                 optCorner.Parent = optBtn
                 
-                -- Используем значение опции напрямую
                 optBtn.MouseButton1Click:Connect(function()
                     selectedValue = option
                     dropdownBtn.Text = option
@@ -352,55 +352,53 @@ function GUI:CreateWindow(config)
                 end)
             end
             
-            listScroll.CanvasSize = UDim2.new(0, 0, 0, #options * 27)
-            
-            -- Открытие/закрытие списка
-            local listOpen = false
-            dropdownBtn.MouseButton1Click:Connect(function()
-                listOpen = not listOpen
-                dropdownList.Visible = listOpen
-                if listOpen then
-                    local height = math.min(#options * 27, 120)
+            -- Обновляем высоту списка
+            local function updateListHeight()
+                local count = #options
+                if count > 0 then
+                    local height = math.min(count * 27, 120)
                     dropdownList.Size = UDim2.new(0.6, 0, 0, height)
-                else
-                    dropdownList.Size = UDim2.new(0.6, 0, 0, 100)
-                end
-            end)
-            
-            -- Закрытие списка при клике вне его (с задержкой, чтобы кнопка успела сработать)
-            local function closeDropdown()
-                if listOpen then
-                    listOpen = false
-                    dropdownList.Visible = false
-                    dropdownList.Size = UDim2.new(0.6, 0, 0, 100)
+                    listScroll.CanvasSize = UDim2.new(0, 0, 0, count * 27)
                 end
             end
             
-            UserInputService.InputBegan:Connect(function(input)
+            updateListHeight()
+            
+            -- Открытие/закрытие списка
+            dropdownBtn.MouseButton1Click:Connect(function()
+                dropdownList.Visible = not dropdownList.Visible
+            end)
+            
+            -- Глобальный обработчик для закрытия списка при клике вне его
+            local function onGlobalClick(input)
                 if input.UserInputType == Enum.UserInputType.MouseButton1 then
-                    -- Даем время кнопке опции сработать
-                    task.wait(0.05)
-                    if dropdownList and dropdownList.Parent then
-                        local mousePos = UserInputService:GetMouseLocation()
-                        local absPos = dropdownList.AbsolutePosition
-                        local absSize = dropdownList.AbsoluteSize
-                        local btnAbsPos = dropdownBtn.AbsolutePosition
-                        local btnAbsSize = dropdownBtn.AbsoluteSize
-                        
-                        -- Проверяем, не кликнули ли по кнопке-дропдауну
-                        local clickedOnButton = (mousePos.X >= btnAbsPos.X and mousePos.X <= btnAbsPos.X + btnAbsSize.X and
-                                                mousePos.Y >= btnAbsPos.Y and mousePos.Y <= btnAbsPos.Y + btnAbsSize.Y)
-                        
-                        -- Проверяем, не кликнули ли по списку
-                        local clickedOnList = (mousePos.X >= absPos.X and mousePos.X <= absPos.X + absSize.X and
-                                              mousePos.Y >= absPos.Y and mousePos.Y <= absPos.Y + absSize.Y)
-                        
-                        if not clickedOnButton and not clickedOnList then
-                            closeDropdown()
-                        end
+                    -- Ждем один кадр
+                    task.wait()
+                    
+                    if not dropdownList.Visible then return end
+                    
+                    local mousePos = UserInputService:GetMouseLocation()
+                    
+                    -- Проверяем клик по кнопке дропдауна
+                    local btnAbsPos = dropdownBtn.AbsolutePosition
+                    local btnAbsSize = dropdownBtn.AbsoluteSize
+                    local clickedOnButton = (mousePos.X >= btnAbsPos.X and mousePos.X <= btnAbsPos.X + btnAbsSize.X and
+                                            mousePos.Y >= btnAbsPos.Y and mousePos.Y <= btnAbsPos.Y + btnAbsSize.Y)
+                    
+                    -- Проверяем клик по списку
+                    local listAbsPos = dropdownList.AbsolutePosition
+                    local listAbsSize = dropdownList.AbsoluteSize
+                    local clickedOnList = (mousePos.X >= listAbsPos.X and mousePos.X <= listAbsPos.X + listAbsSize.X and
+                                          mousePos.Y >= listAbsPos.Y and mousePos.Y <= listAbsPos.Y + listAbsSize.Y)
+                    
+                    -- Если кликнули не по кнопке и не по списку - закрываем
+                    if not clickedOnButton and not clickedOnList then
+                        dropdownList.Visible = false
                     end
                 end
-            end)
+            end
+            
+            UserInputService.InputBegan:Connect(onGlobalClick)
             
             self.CurrentY = self.CurrentY + 35
             self.Frame.Size = UDim2.new(1, -10, 0, self.CurrentY + 10)
