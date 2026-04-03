@@ -327,6 +327,7 @@ function GUI:CreateWindow(config)
         
         -- AddDropdown (исправленная версия с правильным ZIndex)
        -- AddDropdown (исправленная версия с правильным блокировщиком)
+        -- AddDropdown (исправленная версия - увеличена высота списка)
         function section:AddDropdown(config)
             local dropdownFrame = Instance.new("Frame")
             dropdownFrame.Size = UDim2.new(1, -10, 0, 30)
@@ -422,19 +423,37 @@ function GUI:CreateWindow(config)
             
             dropdownBtn.Text = selectedValue
             
+            -- Увеличиваем максимальную высоту списка до 200 (было 150)
+            local MAX_LIST_HEIGHT = 200
+            
             -- Функция для обновления позиции списка и блокировщика
             local function updateListPosition()
                 local btnAbsPos = dropdownBtn.AbsolutePosition
                 local btnAbsSize = dropdownBtn.AbsoluteSize
                 
                 local listWidth = 210
-                local listHeight = math.min(#options * 27, 150)
+                local itemHeight = 27
+                local totalHeight = #options * itemHeight
+                local listHeight = math.min(totalHeight, MAX_LIST_HEIGHT)
                 
-                dropdownList.Size = UDim2.new(0, listWidth, 0, listHeight)
-                listScroll.CanvasSize = UDim2.new(0, 0, 0, #options * 27)
-                dropdownList.Position = UDim2.new(0, btnAbsPos.X + 35, 0, btnAbsPos.Y + btnAbsSize.Y)
+                -- Проверяем, помещается ли список под кнопкой
+                local screenHeight = workspace.CurrentCamera.ViewportSize.Y
+                local spaceBelow = screenHeight - (btnAbsPos.Y + btnAbsSize.Y)
                 
-                -- Позиционируем блокировщик под списком
+                local finalY = btnAbsPos.Y + btnAbsSize.Y
+                local finalHeight = listHeight
+                
+                -- Если не помещается снизу, показываем сверху
+                if spaceBelow < listHeight + 10 then
+                    finalY = btnAbsPos.Y - listHeight
+                    finalHeight = listHeight
+                end
+                
+                dropdownList.Size = UDim2.new(0, listWidth, 0, finalHeight)
+                listScroll.CanvasSize = UDim2.new(0, 0, 0, totalHeight)
+                dropdownList.Position = UDim2.new(0, btnAbsPos.X + 35, 0, finalY)
+                
+                -- Позиционируем блокировщик над списком (чтобы не перекрывать кнопки)
                 blocker.Position = dropdownList.Position
                 blocker.Size = dropdownList.Size
             end
@@ -505,7 +524,7 @@ function GUI:CreateWindow(config)
                 end
             end)
             
-            -- Закрытие списка при клике на блокировщик (TextButton имеет событие MouseButton1Click)
+            -- Закрытие списка при клике на блокировщик
             blocker.MouseButton1Click:Connect(function()
                 if dropdownList.Visible then
                     dropdownList.Visible = false
@@ -637,9 +656,10 @@ function GUI:CreateWindow(config)
                     end
                     
                     local count = #options
-                    local height = math.min(count * 27, 150)
+                    local totalHeight = count * 27
+                    local height = math.min(totalHeight, MAX_LIST_HEIGHT)
                     dropdownList.Size = UDim2.new(0, 210, 0, height)
-                    listScroll.CanvasSize = UDim2.new(0, 0, 0, count * 27)
+                    listScroll.CanvasSize = UDim2.new(0, 0, 0, totalHeight)
                 end
             }
         end
