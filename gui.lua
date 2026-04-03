@@ -326,6 +326,7 @@ function GUI:CreateWindow(config)
         end
         
         -- AddDropdown (исправленная версия с правильным ZIndex)
+       -- AddDropdown (исправленная версия с правильным блокировщиком)
         function section:AddDropdown(config)
             local dropdownFrame = Instance.new("Frame")
             dropdownFrame.Size = UDim2.new(1, -10, 0, 30)
@@ -362,15 +363,16 @@ function GUI:CreateWindow(config)
             local LocalPlayer = game:GetService("Players").LocalPlayer
             local screenGui = LocalPlayer:WaitForChild("PlayerGui")
             
-            -- БЛОКИРОВЩИК (перехватывает клики под списком)
-            local blocker = Instance.new("Frame")
+            -- БЛОКИРОВЩИК (используем TextButton вместо Frame для события клика)
+            local blocker = Instance.new("TextButton")
             blocker.Size = UDim2.new(1, 0, 1, 0)
             blocker.BackgroundTransparency = 1
+            blocker.Text = ""
             blocker.Visible = false
             blocker.ZIndex = 999
             blocker.Parent = screenGui
             blocker.Active = true
-            blocker.Selectable = true
+            blocker.AutoButtonColor = false
             
             -- СОЗДАЕМ КОНТЕЙНЕР ДЛЯ СПИСКА
             local dropdownContainer = Instance.new("ScreenGui")
@@ -420,7 +422,7 @@ function GUI:CreateWindow(config)
             
             dropdownBtn.Text = selectedValue
             
-            -- Функция для обновления позиции списка
+            -- Функция для обновления позиции списка и блокировщика
             local function updateListPosition()
                 local btnAbsPos = dropdownBtn.AbsolutePosition
                 local btnAbsSize = dropdownBtn.AbsoluteSize
@@ -497,14 +499,13 @@ function GUI:CreateWindow(config)
                 else
                     updateListPosition()
                     blocker.Visible = true
-                    blocker.ZIndex = 999
                     dropdownContainer.Enabled = true
                     dropdownList.Visible = true
                     dropdownContainer.DisplayOrder = 100
                 end
             end)
             
-            -- Закрытие списка при клике на блокировщик
+            -- Закрытие списка при клике на блокировщик (TextButton имеет событие MouseButton1Click)
             blocker.MouseButton1Click:Connect(function()
                 if dropdownList.Visible then
                     dropdownList.Visible = false
