@@ -328,6 +328,7 @@ function GUI:CreateWindow(config)
         -- AddDropdown (исправленная версия с правильным ZIndex)
        -- AddDropdown (исправленная версия с правильным блокировщиком)
         -- AddDropdown (исправленная версия - увеличена высота списка)
+        -- AddDropdown (упрощенная версия без блокировщика)
         function section:AddDropdown(config)
             local dropdownFrame = Instance.new("Frame")
             dropdownFrame.Size = UDim2.new(1, -10, 0, 30)
@@ -363,17 +364,6 @@ function GUI:CreateWindow(config)
             -- Получаем ScreenGui
             local LocalPlayer = game:GetService("Players").LocalPlayer
             local screenGui = LocalPlayer:WaitForChild("PlayerGui")
-            
-            -- БЛОКИРОВЩИК (используем TextButton вместо Frame для события клика)
-            local blocker = Instance.new("TextButton")
-            blocker.Size = UDim2.new(1, 0, 1, 0)
-            blocker.BackgroundTransparency = 1
-            blocker.Text = ""
-            blocker.Visible = false
-            blocker.ZIndex = 999
-            blocker.Parent = screenGui
-            blocker.Active = true
-            blocker.AutoButtonColor = false
             
             -- СОЗДАЕМ КОНТЕЙНЕР ДЛЯ СПИСКА
             local dropdownContainer = Instance.new("ScreenGui")
@@ -423,10 +413,9 @@ function GUI:CreateWindow(config)
             
             dropdownBtn.Text = selectedValue
             
-            -- Увеличиваем максимальную высоту списка до 200 (было 150)
             local MAX_LIST_HEIGHT = 200
             
-            -- Функция для обновления позиции списка и блокировщика
+            -- Функция для обновления позиции списка
             local function updateListPosition()
                 local btnAbsPos = dropdownBtn.AbsolutePosition
                 local btnAbsSize = dropdownBtn.AbsoluteSize
@@ -452,10 +441,6 @@ function GUI:CreateWindow(config)
                 dropdownList.Size = UDim2.new(0, listWidth, 0, finalHeight)
                 listScroll.CanvasSize = UDim2.new(0, 0, 0, totalHeight)
                 dropdownList.Position = UDim2.new(0, btnAbsPos.X + 35, 0, finalY)
-                
-                -- Позиционируем блокировщик над списком (чтобы не перекрывать кнопки)
-                blocker.Position = dropdownList.Position
-                blocker.Size = dropdownList.Size
             end
             
             -- Флаг для предотвращения двойного закрытия
@@ -496,7 +481,6 @@ function GUI:CreateWindow(config)
                     selectedValue = optValue
                     dropdownBtn.Text = optValue
                     dropdownList.Visible = false
-                    blocker.Visible = false
                     dropdownContainer.Enabled = false
                     if config.Callback then
                         config.Callback(optValue)
@@ -513,32 +497,21 @@ function GUI:CreateWindow(config)
             dropdownBtn.MouseButton1Click:Connect(function()
                 if dropdownList.Visible then
                     dropdownList.Visible = false
-                    blocker.Visible = false
                     dropdownContainer.Enabled = false
                 else
                     updateListPosition()
-                    blocker.Visible = true
                     dropdownContainer.Enabled = true
                     dropdownList.Visible = true
                     dropdownContainer.DisplayOrder = 100
                 end
             end)
             
-            -- Закрытие списка при клике на блокировщик
-            blocker.MouseButton1Click:Connect(function()
-                if dropdownList.Visible then
-                    dropdownList.Visible = false
-                    blocker.Visible = false
-                    dropdownContainer.Enabled = false
-                end
-            end)
-            
-            -- Закрытие списка при клике вне его (через глобальный обработчик)
+            -- Закрытие списка при клике вне его
             local UserInputService = game:GetService("UserInputService")
             local function onGlobalClick(input)
                 if input.UserInputType == Enum.UserInputType.MouseButton1 then
                     if isSelecting then return end
-                    task.wait(0.05)
+                    task.wait(0.1)
                     if not dropdownList.Visible then return end
                     
                     local mousePos = UserInputService:GetMouseLocation()
@@ -555,7 +528,6 @@ function GUI:CreateWindow(config)
                     
                     if not clickedOnButton and not clickedOnList then
                         dropdownList.Visible = false
-                        blocker.Visible = false
                         dropdownContainer.Enabled = false
                     end
                 end
@@ -642,7 +614,6 @@ function GUI:CreateWindow(config)
                             selectedValue = optValue
                             dropdownBtn.Text = optValue
                             dropdownList.Visible = false
-                            blocker.Visible = false
                             dropdownContainer.Enabled = false
                             if config.Callback then
                                 config.Callback(optValue)
